@@ -11,21 +11,31 @@
     </div>
 
     <div id="content" class="relative flex justify-center h-screen p-4">
+
+<!--        NAVBAR Section-->
+
         <div id="navbar" class="relative w-full h-12 max-w-7xl p-4 bg-white bg-opacity-80 rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)]">
 
             <div id="navbar-content" class="grid grid-cols-[repeat(7,1fr)] grid-rows-1 gap-2 h-full">
 
+<!--                LOGO + SEARCHBAR Section-->
+
                 <div id="left" class="col-span-3 flex items-center gap-2">
 
-                    <div id="logo" class="absolute top-1/2 transform -translate-y-1/2 text-xl font-bold text-gray-800 p-1">
+                    <div id="logo" class="top-1/2 text-xl font-bold text-gray-800 p-1">
                         <img src="/public/img/plumbob.webp" alt="website logo" class="w-8 h-8 object-contain">
                     </div>
 
-<!--                    <div id="searchbar">-->
-<!--                        <form method="post">-->
-<!--                            <input>-->
-<!--                        </form>-->
-<!--                    </div>-->
+                    <div id="searchbar">
+                        <form method="post">
+                            <label>
+                                <input type="text"
+                                       placeholder="Search..."
+                                       class="pl-4 pr-16 py-1 bg-white bg-opacity-80 rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] placeholder:text-[#3769a9] outline-none focus:ring-2 focus:ring-[#3769a9] focus:ring-opacity-50 transition duration-200 ease-in-out"
+                                       autocomplete="off">
+                            </label>
+                        </form>
+                    </div>
 
                 </div>
 
