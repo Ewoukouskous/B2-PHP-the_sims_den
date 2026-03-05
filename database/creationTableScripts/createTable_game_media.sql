@@ -1,5 +1,5 @@
 ﻿CREATE TABLE game_media (
-    id INTEGER AUTOINCREMENT PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     file_path TEXT NOT NULL,
     id_game INTEGER NOT NULL,
     -- Lorsqu'un jeu est supprimé, on supprime automatiquement

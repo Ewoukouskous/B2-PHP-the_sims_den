@@ -1,5 +1,5 @@
 ﻿CREATE TABLE user_account (
-    id INTEGER AUTOINCREMENT PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_role TEXT CHECK ( user_role IN ('user', 'admin') ) DEFAULT 'user' NOT NULL,
     username TEXT NOT NULL UNIQUE,
     email TEXT NOT NULL UNIQUE,

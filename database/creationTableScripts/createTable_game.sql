@@ -1,5 +1,5 @@
 ﻿CREATE TABLE game (
-    id INTEGER AUTOINCREMENT PRIMARY KEY,
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
     game_name TEXT UNIQUE NOT NULL,
     price REAL NOT NULL,
     game_type TEXT CHECK ( game_type IN ('pc','console','smartphone') ) NOT NULL,
