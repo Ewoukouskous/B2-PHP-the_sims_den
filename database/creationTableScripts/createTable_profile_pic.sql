@@ -1,0 +1,4 @@
+﻿CREATE TABLE profile_pic (
+    id INTEGER AUTOINCREMENT PRIMARY KEY,
+    picture BLOB NOT NULL UNIQUE
+);

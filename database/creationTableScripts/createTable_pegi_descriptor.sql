@@ -1,0 +1,4 @@
+﻿CREATE TABLE pegi_descriptor (
+    id INTEGER AUTOINCREMENT PRIMARY KEY,
+    label TEXT UNIQUE NOT NULL
+);
