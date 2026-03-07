@@ -11,7 +11,7 @@ class UserAccount {
     private DateTime $dateJoined;
     private ?DateTime $lastLogin = null;
 
-    private int $idProfilePic;
+    private int $idProfilePic = 1; // Default profile picture is the one with id = 1 in the database (the "default" profile picture)
 
     // CONSTRUCTOR
     public function __construct(string $username, string $email, string $passwordHash) {
