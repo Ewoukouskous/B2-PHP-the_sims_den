@@ -12,4 +12,7 @@ class ProfilePic {
     // GETTERS
     public function getId(): ?int {return $this->id;}
     public function getPicture(): string {return $this->picture;}
+
+    // SETTERS
+    public function setId(int $id): void {$this->id = $id;}
 }
