@@ -1,10 +1,5 @@
 ﻿<?php
 
-enum UserRole: string {
-    case USER = 'user';
-    case ADMIN = 'admin';
-}
-
 class UserAccount {
     // ATTRIBUTES
     private ?int $id = null; // Is equal to null by default, because when we create a user (to INSERT if after) we don't know his id yet
