@@ -26,11 +26,15 @@ class ProfilePicRepository {
 
     // READ [ID] : Find a profile_pic by its id
     public function findById(int $id) : ?ProfilePic {
+        // We prepare the SQL request string with named parameters (to avoid SQL injections)
         $sqlRequest = "SELECT * FROM profile_pic WHERE id = :id;";
+        // We prepare the SQL request with the PDO connection, "this->pdo->prepare()" return a PDOStatement object
         $statement = $this->pdo->prepare($sqlRequest);
+        // We execute the request
         $statement->execute(['id' => $id]);
-
+        // We now fetch the result of the execution and store it in $row
         $row = $statement->fetch();
+        // If $row isn't empty we create a new ProfilePic object then return it
         if ($row) {
             $profilePic = new ProfilePic($row['picture']);
             $profilePic->setId($row['id']);
@@ -41,10 +45,13 @@ class ProfilePicRepository {
 
     // READ [ALL] : Find all profile_pic from the database
     public function findAll() : array {
+        // Because there is no named parameters (no custom parameters), we don't need to prepare the SQL string before
         $statement = $this->pdo->query("SELECT * FROM profile_pic;");
+        // We get all the rows resulted for our previous query
         $rows = $statement->fetchAll();
 
         $profilePics = [];
+        // We create a ProfilePic object for each element of the $rows array
         foreach($rows as $row) {
             $profilePic = new ProfilePic($row['picture']);
             $profilePic->setId($row['id']);
