@@ -46,6 +46,8 @@ class UserAccount {
 
     public function setPasswordHash(string $passwordHash): void {$this->passwordHash = $passwordHash;}
 
+    public function setDateJoined(DateTime $dateJoined): void {$this->dateJoined = $dateJoined;}
+
     public function setLastLogin(?DateTime $lastLogin): void {$this->lastLogin = $lastLogin;}
 
     public function setIdProfilePic(int $idProfilePic): void {$this->idProfilePic = $idProfilePic;}
