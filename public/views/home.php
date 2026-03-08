@@ -7,7 +7,7 @@
 </head>
 <body>
     <div id="background" class="fixed top-0 left-0 w-full h-full bg-cover bg-center">
-        <img src="/public/img/bg.png" alt="Background Image" class="w-full h-full object-cover">
+        <img src="../img/bg.png" alt="Background Image" class="w-full h-full object-cover">
     </div>
 
     <div id="content" class="relative flex justify-center h-screen p-4 pt-12">
@@ -22,9 +22,11 @@
 
                 <div id="left" class="col-span-3 flex items-center gap-2">
 
-                    <div id="logo" class="top-1/2 text-xl font-bold text-gray-800 p-1">
-                        <img src="/public/img/plumbob.webp" alt="website logo" class="w-8 h-8 object-contain">
-                    </div>
+                    <a href="home.php">
+                        <div id="logo" class="top-1/2 text-xl font-bold text-gray-800 p-1">
+                            <img src="../img/plumbob.webp" alt="website logo" class="w-8 h-8 object-contain">
+                        </div>
+                    </a>
 
                     <div id="searchbar">
                         <form method="post">
@@ -44,11 +46,13 @@
                 
                 <div id="middle" class="col-start-4 flex justify-center">
 
-                    <img src="/public/img/temp/profile_pic.webp"
-                         class="absolute w-20 h-20 object-cover transform -top-10 border-2 rounded-full"
-                         style="border-color: #33b842;"
-                         alt="profile picture"
-                         title="profile picture">
+                    <a href="#">
+                        <img src="../img/temp/profile_pic.webp"
+                             class="absolute w-20 h-20 object-cover transform -top-10 border-2 rounded-full"
+                             style="border-color: #33b842;"
+                             alt="profile picture"
+                             title="profile picture">
+                    </a>
 
                 </div>
 
@@ -107,7 +111,7 @@
                 <a href="#" class="block bg-white rounded-[2.5rem] p-3 shadow-lg border-b-8 border-[#33b842]">
 
                     <div class="relative h-48 w-full overflow-hidden rounded-[2rem]">
-                        <img src="/public/img/life_and_death.png" alt="Life and Death" class="w-full h-full object-cover">
+                        <img src="../img/life_and_death.png" alt="Life and Death" class="w-full h-full object-cover">
                     </div>
 
                     <div class="mt-4 mb-16 text-center">
