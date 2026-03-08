@@ -24,4 +24,5 @@ class UserFavorite {
 
     // SETTERS
     public function setPlaytimeHours(int $playtimeHours): void {$this->playtimeHours = $playtimeHours;}
+    public function setDateAdded(DateTime $date) : void {$this->dateAdded = $date;}
 }
