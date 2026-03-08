@@ -8,7 +8,7 @@ class Game {
     private string $gameDesc;
     private string $imageHeroPath;
     private string $imageTitlePath;
-    private int $favoriteNumber = 0;
+    private int $favoritesNumber = 0;
     private PegiAge $pegiAge;
 
     // CONSTRUCTOR
@@ -31,7 +31,7 @@ class Game {
     public function getGameDesc() : string {return $this->gameDesc;}
     public function getImageHeroPath() : string {return $this->imageHeroPath;}
     public function getImageTitlePath() : string {return $this->imageTitlePath;}
-    public function getFavoriteNumber() : int {return $this->favoriteNumber;}
+    public function getFavoritesNumber() : int {return $this->favoritesNumber;}
     public function getPegiAge() : PegiAge {return $this->pegiAge;}
 
     // SETTERS
@@ -42,6 +42,6 @@ class Game {
     public function setGameDesc(string $gameDesc): void {$this->gameDesc = $gameDesc;}
     public function setImageHeroPath(string $imageHeroPath): void {$this->imageHeroPath = $imageHeroPath;}
     public function setImageTitlePath(string $imageTitlePath): void {$this->imageTitlePath = $imageTitlePath;}
-    public function setFavoriteNumber(int $favoriteNumber): void {$this->favoriteNumber = $favoriteNumber;}
+    public function setFavoriteNumber(int $favoritesNumber): void {$this->favoritesNumber = $favoritesNumber;}
     public function setPegiAge(PegiAge $pegiAge): void {$this->pegiAge = $pegiAge;}
 }
