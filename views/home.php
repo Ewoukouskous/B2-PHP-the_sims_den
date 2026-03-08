@@ -80,19 +80,19 @@
 
                 <input type="checkbox" id="filter1" class="hidden peer/pc">
                 <label for="filter1"
-                       class="px-6 py-1 bg-[#F0EEE9] rounded-4xl text-[#33b842] font-medium outline-none transition duration-200 ease-in-out cursor-pointer peer-checked/pc:bg-[#2a9636] peer-checked/pc:scale-110 peer-checked/pc:text-white peer-checked/pc:border-2 peer-checked/pc:border-white">
+                       class="px-6 py-1 bg-[#F0EEE9] rounded-4xl text-[#33b842] font-medium outline-none transition duration-200 ease-in-out cursor-pointer border-2 border-transparent peer-checked/pc:bg-[#2a9636] peer-checked/pc:text-white peer-checked/pc:border-white">
                     PC
                 </label>
 
                 <input type="checkbox" id="filter2" class="hidden peer/console">
                 <label for="filter2"
-                       class="px-6 py-1 bg-[#F0EEE9] rounded-4xl text-[#33b842] font-medium outline-none transition duration-200 ease-in-out cursor-pointer peer-checked/console:bg-[#2a9636] peer-checked/console:scale-110 peer-checked/console:text-white peer-checked/console:border-2 peer-checked/console:border-white">
+                       class="px-6 py-1 bg-[#F0EEE9] rounded-4xl text-[#33b842] font-medium outline-none transition duration-200 ease-in-out cursor-pointer border-2 border-transparent peer-checked/console:bg-[#2a9636] peer-checked/console:text-white peer-checked/console:border-white">
                     Console
                 </label>
 
                 <input type="checkbox" id="filter3" class="hidden peer/smartphone">
                 <label for="filter3"
-                       class="px-6 py-1 bg-[#F0EEE9] rounded-4xl text-[#33b842] font-medium outline-none transition duration-200 ease-in-out cursor-pointer peer-checked/smartphone:bg-[#2a9636] peer-checked/smartphone:scale-110 peer-checked/smartphone:text-white peer-checked/smartphone:border-2 peer-checked/smartphone:border-white">
+                       class="px-6 py-1 bg-[#F0EEE9] rounded-4xl text-[#33b842] font-medium outline-none transition duration-200 ease-in-out cursor-pointer border-2 border-transparent peer-checked/smartphone:bg-[#2a9636] peer-checked/smartphone:text-white peer-checked/smartphone:border-white">
                     Smartphone
                 </label>
 
