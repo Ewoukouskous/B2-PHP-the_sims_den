@@ -13,7 +13,7 @@ class AchievementRepository {
 
     // UTILITY METHOD : Convert a database row (associative array) to an Achievement object
     private function rowToAchievement(array $row) : Achievement {
-        $achievement = new Achievement($row['achievement_name'], $row['achievement_desc']);
+        $achievement = new Achievement($row['achievement_name'], $row['icon_path'], $row['achievement_desc']);
         $achievement->setId($row['id']);
         return $achievement;
     }
@@ -21,13 +21,15 @@ class AchievementRepository {
     // CREATE : Insert a new achievement in the database
     public function insert(Achievement $achievement) : void {
         // We prepare the SQL request string with named parameters (to avoid SQL injections)
-        $sqlRequest = "INSERT INTO achievement (achievement_name, achievement_desc) VALUES (:achievement_name, :achievement_desc);";
+        $sqlRequest = "INSERT INTO achievement (achievement_name, achievement_desc, icon_path) 
+                    VALUES (:achievement_name, :achievement_desc, :icon_path);";
         // We prepare the SQL request with the PDO connection, "this->pdo->prepare()" return a PDOStatement object
         $statement = $this->pdo->prepare($sqlRequest);
         // We execute the request
         $statement->execute([
             'achievement_name' => $achievement->getAchievementName(),
-            'achievement_desc' => $achievement->getAchievementDesc()
+            'achievement_desc' => $achievement->getAchievementDesc(),
+            'icon_path' => $achievement->getIconPath()
         ]);
         // Update the Achievement object's id by getting it from "pdo->lastInsertId()"
         $achievement->setId((int)$this->pdo->lastInsertId());
@@ -83,7 +85,8 @@ class AchievementRepository {
         // We prepare the SQL request string with named parameters (to avoid SQL injections)
         $sqlRequest = "UPDATE achievement
                     SET achievement_name = :achievement_name,
-                        achievement_desc = :achievement_desc
+                        achievement_desc = :achievement_desc,
+                        icon_path = :icon_path
                     WHERE id = :id ;";
         // We prepare the SQL request with the PDO connection, "this->pdo->prepare()" return a PDOStatement object
         $statement = $this->pdo->prepare($sqlRequest);
@@ -91,6 +94,7 @@ class AchievementRepository {
         $statement->execute([
             'achievement_name' => $achievement->getAchievementName(),
             'achievement_desc' => $achievement->getAchievementDesc(),
+            'icon_path' => $achievement->getIconPath(),
             'id' => $achievement->getId()
         ]);
     }
