@@ -1,9 +1,9 @@
 <?php
 
 // Valeurs par défaut si besoin de changer en fonction du code qui include le header
-$basePath = isset($basePath) ? $basePath : '';
+$basePath = $basePath ?? '';
 $showLoginButton = !isset($showLoginButton) || $showLoginButton;
-$searchPlaceholder = isset($searchPlaceholder) ? $searchPlaceholder : 'Recherche :';
+$searchPlaceholder = $searchPlaceholder ?? 'Recherche :';
 ?>
 
 <div id="navbar" class="relative w-full h-12 max-w-7xl p-4 bg-[#F0EEE9] bg-opacity-80 rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)]">
