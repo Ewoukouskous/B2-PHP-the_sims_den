@@ -14,11 +14,11 @@ class ProfilePicRepository {
     // CREATE : Insert a new profile_pic in the database
     public function insert(ProfilePic $profilePic) : void {
         // We prepare the SQL request string with named parameters (to avoid SQL injections)
-        $sqlRequest = "INSERT INTO profile_pic (picture) VALUES (:picture);";
+        $sqlRequest = "INSERT INTO profile_pic (picture_path) VALUES (:picture_path);";
         // We prepare the SQL request with the PDO connection, "this->pdo->prepare()" return a PDOStatement object
         $statement = $this->pdo->prepare($sqlRequest);
         // We execute the request
-        $statement->execute(['picture' => $profilePic->getPicture()]);
+        $statement->execute(['picture_path' => $profilePic->getPicturePath()]);
 
         // Update the ProfilePic object's id by getting it from "pdo->lastInsertId()"
         $profilePic->setId((int)$this->pdo->lastInsertId());
@@ -36,7 +36,7 @@ class ProfilePicRepository {
         $row = $statement->fetch();
         // If $row isn't empty we create a new ProfilePic object then return it
         if ($row) {
-            $profilePic = new ProfilePic($row['picture']);
+            $profilePic = new ProfilePic($row['picture_path']);
             $profilePic->setId($row['id']);
             return $profilePic;
         }
@@ -53,7 +53,7 @@ class ProfilePicRepository {
         $profilePics = [];
         // We create a ProfilePic object for each element of the $rows array
         foreach($rows as $row) {
-            $profilePic = new ProfilePic($row['picture']);
+            $profilePic = new ProfilePic($row['picture_path']);
             $profilePic->setId($row['id']);
             $profilePics[] = $profilePic;
         }
