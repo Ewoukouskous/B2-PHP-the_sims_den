@@ -5,8 +5,11 @@ if (session_status() === PHP_SESSION_NONE) {session_start();}
 // SELECT the actual DIR (public/auth), and ask the go up to the root (2 levels)
 $root_path = dirname(__DIR__, 2);
 
-// Check if the user is already login (already have a userId), we redirect him to the index.php
-if (!empty($_SESSION['userId'])) {
+require_once $root_path . '/src/Database/DatabaseConnection.php';
+require_once $root_path . '/src/Security/AuthMiddleware.php';
+
+// Check if the user is already login, we redirect him to the index.php
+if (AuthMiddleware::is_connected($_SESSION)) {
     header('Location: /index.php');
     exit();
 }
@@ -16,7 +19,6 @@ $error_msg = '';
 // If the request is a POST we start the login process
 if ($_SERVER['REQUEST_METHOD'] === "POST") {
     // DEPENDENCIES
-    require_once $root_path . '/src/Database/DatabaseConnection.php';
     require_once $root_path . '/src/Model/UserAccount.php';
     require_once $root_path . '/src/Repository/UserAccountRepository.php';
     require_once $root_path . '/src/Enum/UserRole.php';

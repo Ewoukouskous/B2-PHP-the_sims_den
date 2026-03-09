@@ -7,8 +7,8 @@ if (session_status() === PHP_SESSION_NONE) {
 // SELECT the actual DIR (public/auth), and ask the go up to the root (2 levels)
 $root_path = dirname(__DIR__, 2);
 
-// Check if the user is already login (already have a userId), we redirect him to the index.php
-if (!empty($_SESSION['userId'])) {
+// Check if the user is already login, we redirect him to the index.php
+if (AuthMiddleware::is_connected($_SESSION)) {
     header('Location: /index.php');
     exit();
 }
