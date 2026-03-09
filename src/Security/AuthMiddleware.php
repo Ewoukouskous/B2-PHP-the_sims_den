@@ -3,8 +3,12 @@
 class AuthMiddleware {
     // CONSTRUCTOR (private because this class don't need to be instanciate)
     private function __construct() {}
+
     // METHODS
+
     // Simply check if the user is connected (no need to check if Id is valid)
+    // if the user is connected you logically have access to those attributes :
+    //  - userId -userRole -username -profilePicPath
     public static function is_connected(array $session) : bool {
         return isset($session['userId']);
     }
