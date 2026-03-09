@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
     // Fields validation :
     // first we check that all fields are filled and then check specifications for each field
     if ($email === '' || $username === '' || $password === '' || $confirm_password === '') {
-        $error_msg = 'ÉCHEC : Assurez vous que tous les champs sont remplis';
+        $error_msg = 'ÉCHEC : Assurez vous que tous les champs soient remplis';
     // check if the email is valid
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error_msg = 'ÉCHEC : Champ Email non valide';
