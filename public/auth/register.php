@@ -83,7 +83,7 @@
             </h1>
         </div>
 
-        <div class="bg-[#F0EEE9] bg-opacity-95 rounded-[3rem] pt-24 px-8 pb-8 shadow-2xl">
+        <div class="bg-[#F0EEE9] bg-opacity-95 rounded-[3rem] pt-24 px-8 pb-8 shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)]">
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
 
