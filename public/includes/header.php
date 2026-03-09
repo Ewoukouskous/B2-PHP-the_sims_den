@@ -14,7 +14,7 @@ $searchPlaceholder = isset($searchPlaceholder) ? $searchPlaceholder : 'Recherche
 
         <div id="left" class="col-span-3 flex items-center gap-2">
 
-            <a href="<?php echo $basePath; ?>home.php">
+            <a href="<?php echo $basePath; ?>index.php">
                 <div id="logo" class="top-1/2 text-xl font-bold text-gray-800 p-1">
                     <img src="<?php echo $basePath; ?>img/plumbob.webp" alt="website logo" class="w-8 h-8 object-contain">
                 </div>
@@ -57,7 +57,7 @@ $searchPlaceholder = isset($searchPlaceholder) ? $searchPlaceholder : 'Recherche
                     </button>
                 </a>
             <?php else: ?>
-                <a href="#">
+                <a href="<?php echo $basePath; ?>auth/login.php">
                     <button type="button"
                             class="px-6 py-1 bg-[#F0EEE9] bg-opacity-80 rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-[#3769a9] font-medium outline-none hover:ring-2 hover:ring-[#3769a9] hover:ring-opacity-50 transition duration-200 ease-in-out">
                         Connexion
