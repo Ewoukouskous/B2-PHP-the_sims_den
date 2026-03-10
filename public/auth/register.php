@@ -123,7 +123,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
 
         <!--            TITLE (positioned above the container)-->
         <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 z-10">
-            <h1 class="text-4xl font-bold text-[#3769a9] bg-[#F0EEE9] inline-block px-12 py-3 rounded-full border-4 border-[#33b842] shadow-lg whitespace-nowrap">
+            <h1 class="text-4xl font-bold text-[#3769a9] bg-[#F0EEE9] inline-block px-12 py-3 rounded-full shadow-[0px_2px_0px_1.5px_rgba(51,184,66,1)] whitespace-nowrap">
                 Inscription
             </h1>
         </div>

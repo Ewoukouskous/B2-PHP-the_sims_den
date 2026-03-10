@@ -97,7 +97,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
 
         <!--            TITLE (positioned above the container)-->
         <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 z-10">
-            <h1 class="text-4xl font-bold text-[#3769a9] bg-[#F0EEE9] inline-block px-12 py-3 rounded-full border-4 border-[#33b842] shadow-lg whitespace-nowrap">
+            <h1 class="text-4xl font-bold text-[#3769a9] bg-[#F0EEE9] inline-block px-12 py-3 rounded-full shadow-[0px_2px_0px_1.5px_rgba(51,184,66,1)] whitespace-nowrap">
                 Connexion
             </h1>
         </div>
@@ -120,13 +120,8 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
                 <div class="space-y-4">
 
                     <?php if (!empty($error_msg)): ?>
-                        <div class="bg-red-500 text-white px-6 py-4 rounded-2xl shadow-lg border-2 border-red-600" role="alert">
-                            <div class="flex items-center gap-3">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                </svg>
-                                <p class="font-bold"><?php echo htmlspecialchars($error_msg); ?></p>
-                            </div>
+                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg" role="alert">
+                            <p class="font-medium"><?php echo htmlspecialchars($error_msg); ?></p>
                         </div>
                     <?php endif; ?>
 
