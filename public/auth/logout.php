@@ -24,5 +24,5 @@ if (isset($_COOKIE[session_name()])) {
 // Then by security we use session_destroy()
 session_destroy();
 // After all that we redirect to the homepage
-header('Location: /index.php');
+header('Location: ../index.php');
 exit();

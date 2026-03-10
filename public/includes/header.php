@@ -1,9 +1,12 @@
 <?php
 
-// Valeurs par défaut si besoin de changer en fonction du code qui include le header
 $basePath = $basePath ?? '';
 $showLoginButton = !isset($showLoginButton) || $showLoginButton;
+$showProfilePic = $showProfilePic ?? false;
 $searchPlaceholder = $searchPlaceholder ?? 'Recherche :';
+
+$username = $_SESSION['username'] ?? '';
+$profilePicPath = $_SESSION['profilePicPath'] ?? 'img/profilePics/cyan_plumbob.png';
 ?>
 
 <div id="navbar" class="relative w-full h-12 max-w-7xl p-4 bg-[#F0EEE9] bg-opacity-80 rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)]">
@@ -38,12 +41,22 @@ $searchPlaceholder = $searchPlaceholder ?? 'Recherche :';
 
         <div id="middle" class="col-start-4 flex justify-center">
 
-                <a href="<?php echo $basePath; ?>#">
+            <?php if ($showProfilePic): ?>
+                <!-- Photo de profil de l'utilisateur connecté -->
+                <a href="#" title="<?php echo htmlspecialchars($username); ?>">
+                    <img src="<?php echo $basePath . htmlspecialchars($profilePicPath); ?>"
+                         class="absolute w-16 h-16 object-cover transform -top-8 bg-[#2a5885] border-4 border-[#33b842] rounded-full hover:scale-110 transition-transform"
+                         alt="Photo de profil de <?php echo htmlspecialchars($username); ?>">
+                </a>
+            <?php else: ?>
+                <!-- Logo plumbob par défaut -->
+                <a href="<?php echo $basePath; ?>index.php">
                     <img src="<?php echo $basePath; ?>img/plumbob.webp"
                          class="absolute w-16 h-16 object-contain transform -top-8 bg-[#2a5885] border-4 border-[#33b842] rounded-full p-2"
                          alt="logo"
                          title="The Sims Den">
                 </a>
+            <?php endif; ?>
 
         </div>
 
@@ -56,11 +69,18 @@ $searchPlaceholder = $searchPlaceholder ?? 'Recherche :';
                         Se connecter
                     </button>
                 </a>
+
+                <a href="<?php echo $basePath; ?>auth/register.php">
+                    <button type="button"
+                            class="px-6 py-1 bg-[#33b842] hover:bg-[#2a9636] rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-white font-medium outline-none hover:ring-2 hover:ring-white hover:ring-opacity-50 transition duration-200 ease-in-out">
+                        S'inscrire
+                    </button>
+                </a>
             <?php else: ?>
-                <a href="<?php echo $basePath; ?>auth/login.php">
+                <a href="<?php echo $basePath; ?>auth/logout.php">
                     <button type="button"
                             class="px-6 py-1 bg-[#F0EEE9] bg-opacity-80 rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-[#3769a9] font-medium outline-none hover:ring-2 hover:ring-[#3769a9] hover:ring-opacity-50 transition duration-200 ease-in-out">
-                        Connexion
+                        Déconnexion
                     </button>
                 </a>
 

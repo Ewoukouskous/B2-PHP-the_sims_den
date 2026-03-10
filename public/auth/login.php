@@ -10,7 +10,7 @@ require_once $root_path . '/src/Security/AuthMiddleware.php';
 
 // Check if the user is already login, we redirect him to the index.php
 if (AuthMiddleware::is_connected($_SESSION)) {
-    header('Location: /index.php');
+    header('Location: ../index.php');
     exit();
 }
 
@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
             }
 
             // The PHPSESSION creation is done, now we redirect to the homepage
-            header("Location: /index.php");
+            header("Location: ../index.php");
             exit();
         } else {
             $error_msg = "Nom d'utilisateur / Email ou le mot de passe est incorrect";
@@ -119,16 +119,22 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
                 <!--                RIGHT SIDE - FORM-->
                 <div class="space-y-8">
 
+                    <?php if (!empty($error_msg)): ?>
+                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg" role="alert">
+                            <p class="font-medium"><?php echo htmlspecialchars($error_msg); ?></p>
+                        </div>
+                    <?php endif; ?>
+
                     <form method="post" action="" class="space-y-6">
 
                         <!--                        USERNAME/EMAIL FIELD-->
                         <div>
-                            <label for="login" class="flex justify-center block text-lg font-medium text-[#3769a9] mt-18">
+                            <label for="username" class="flex justify-center block text-lg font-medium text-[#3769a9] mt-18">
                                 Pseudonyme / Courriel<span class="text-red-500">*</span> :
                             </label>
                             <input type="text"
-                                   id="login"
-                                   name="login"
+                                   id="username"
+                                   name="username"
                                    placeholder="SulSul23400"
                                    required
                                    class="w-full px-5 py-2 bg-white rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] placeholder:text-[#3769a9] placeholder:opacity-50 text-[#3769a9] font-medium outline-none focus:ring-2 focus:ring-[#3769a9] focus:ring-opacity-50 transition duration-200 ease-in-out">

@@ -7,9 +7,12 @@ if (session_status() === PHP_SESSION_NONE) {
 // SELECT the actual DIR (public/auth), and ask the go up to the root (2 levels)
 $root_path = dirname(__DIR__, 2);
 
+require_once $root_path . '/src/Database/DatabaseConnection.php';
+require_once $root_path . '/src/Security/AuthMiddleware.php';
+
 // Check if the user is already login, we redirect him to the index.php
 if (AuthMiddleware::is_connected($_SESSION)) {
-    header('Location: /index.php');
+    header('Location: ../index.php');
     exit();
 }
 
@@ -81,8 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
                 $_SESSION['profilePicPath'] = $profilePicRepository->findById(1)->getPicturePath();
             }
 
-            // The user_account creation is done, now we redirect to the homepage
-            header("Location: /index.php");
+            header("Location: ../index.php");
             exit();
         } else {
             $error_msg = "Échec : Une erreur est survenue lors du processus d'inscription";
@@ -132,6 +134,12 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
 
                 <!--                LEFT SIDE - FORM-->
                 <div class="space-y-4">
+
+                    <?php if (!empty($error_msg)): ?>
+                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg" role="alert">
+                            <p class="font-medium"><?php echo htmlspecialchars($error_msg); ?></p>
+                        </div>
+                    <?php endif; ?>
 
                     <form method="post" action="" class="space-y-4">
 
