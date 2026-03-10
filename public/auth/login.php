@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
             </h1>
         </div>
 
-        <div class="bg-[#F0EEE9] bg-opacity-95 rounded-[3rem] pt-24 px-8 pb-28 shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)]">
+        <div class="bg-[#F0EEE9] bg-opacity-95 rounded-[3rem] pt-24 px-8 pb-8 shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)]">
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
 
@@ -117,15 +117,20 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
                 </div>
 
                 <!--                RIGHT SIDE - FORM-->
-                <div class="space-y-8">
+                <div class="space-y-4">
 
                     <?php if (!empty($error_msg)): ?>
-                        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg" role="alert">
-                            <p class="font-medium"><?php echo htmlspecialchars($error_msg); ?></p>
+                        <div class="bg-red-500 text-white px-6 py-4 rounded-2xl shadow-lg border-2 border-red-600" role="alert">
+                            <div class="flex items-center gap-3">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <p class="font-bold"><?php echo htmlspecialchars($error_msg); ?></p>
+                            </div>
                         </div>
                     <?php endif; ?>
 
-                    <form method="post" action="" class="space-y-6">
+                    <form method="post" action="" class="space-y-4">
 
                         <!--                        USERNAME/EMAIL FIELD-->
                         <div>
