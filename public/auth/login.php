@@ -172,8 +172,8 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
                             <input type="checkbox"
                                    id="remember"
                                    name="remember"
-                                   class="w-4 h-4 rounded border-[#3769a9] text-[#3769a9] focus:ring-[#3769a9] cursor-pointer">
-                            <label for="remember" class="text-[#3769a9] font-medium cursor-pointer select-none">
+                                   class="w-4 h-4 rounded border-[#3769a9] text-[#3769a9] focus:ring-[#3769a9] cursor-pointer hidden">
+                            <label for="remember" class="text-[#3769a9] font-medium cursor-pointer select-none hidden">
                                 Se souvenir de moi
                             </label>
                         </div>
