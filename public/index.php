@@ -18,7 +18,7 @@
         $basePath = '';
         $showLoginButton = false;
         $showProfilePic = true;
-        $searchPlaceholder = 'Search...';
+        $searchPlaceholder = 'Recherche :';
         include 'includes/header.php';
         ?>
 

@@ -38,7 +38,7 @@ $searchPlaceholder = $searchPlaceholder ?? 'Recherche :';
 
         <div id="middle" class="col-start-4 flex justify-center">
 
-                <a href="<?php echo $basePath; ?>home.php">
+                <a href="<?php echo $basePath; ?>#">
                     <img src="<?php echo $basePath; ?>img/plumbob.webp"
                          class="absolute w-16 h-16 object-contain transform -top-8 bg-[#2a5885] border-4 border-[#33b842] rounded-full p-2"
                          alt="logo"
