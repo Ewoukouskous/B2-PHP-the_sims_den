@@ -129,7 +129,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
 
                         <!--                        USERNAME/EMAIL FIELD-->
                         <div>
-                            <label for="username" class="flex justify-center block text-lg font-medium text-[#3769a9] mt-18">
+                            <label for="username" class="flex block text-lg font-medium text-[#3769a9] mt-18">
                                 Pseudonyme / Courriel<span class="text-red-500">*</span> :
                             </label>
                             <input type="text"
