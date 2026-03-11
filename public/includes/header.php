@@ -6,7 +6,7 @@ $showProfilePic = $showProfilePic ?? false;
 $searchPlaceholder = $searchPlaceholder ?? 'Recherche :';
 
 $username = $_SESSION['username'] ?? '';
-$profilePicPath = $_SESSION['profilePicPath'] ?? 'img/profilePics/cyan_plumbob.png';
+$profilePicPath = $_SESSION['profilePicPath'] ?? 'img/profilePics/green_plumbob.png';
 ?>
 
 <div id="navbar" class="relative w-full h-12 max-w-7xl p-4 bg-[#F0EEE9] bg-opacity-80 rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)]">
@@ -51,7 +51,7 @@ $profilePicPath = $_SESSION['profilePicPath'] ?? 'img/profilePics/cyan_plumbob.p
             <?php else: ?>
                 <!-- Logo plumbob par défaut -->
                 <a href="<?php echo $basePath; ?>index.php">
-                    <img src="<?php echo $basePath; ?>img/plumbob.webp"
+                    <img src="<?php echo  $basePath.$profilePicPath ?>"
                          class="absolute w-16 h-16 object-contain transform -top-8 bg-[#2a5885] border-4 border-[#33b842] rounded-full p-2"
                          alt="logo"
                          title="The Sims Den">
