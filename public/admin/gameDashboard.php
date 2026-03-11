@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['
 
     // DEPENDENCIES TO CREATE GAME
     require_once $root_path . '/src/Model/Game.php';
-    require_once $root_path . '/src/Repository/GameRepository.php.php';
+    require_once $root_path . '/src/Repository/GameRepository.php';
     require_once $root_path . '/src/Model/GameMedia.php';
     require_once $root_path . '/src/Repository/GameMediaRepository.php';
     require_once $root_path . '/src/Model/GamePegiDescriptor.php';
@@ -44,6 +44,10 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['
 
     $gameRepo = new GameRepository();
     $authorizedExtensions = ['png','jpg','jpeg','webp'];
+    $maxSizePerFile = 10 * 1024 * 1024; // 10MB in bytes
+    $maxTotalSize = 50 * 1024 * 1024;   // 50MB in bytes
+    $totalSize = 0;
+
 
     // Get the fields values (starting by the simplest ones)
     //1. Recuperation and cleaning of the text/number values
@@ -66,17 +70,17 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['
     // start checking if the basic fields are filled and valid
     if (empty($gameTitle) || empty($gameDesc) || $gamePrice === false) {
         $error_msg = "Veuillez remplir correctement les champs obligatoires (Titre, Description, Prix)";
-    // check if the gameType enum value was valid
+        // check if the gameType enum value was valid
     } elseif ($gameType === null) {
         $error_msg = "Le type de jeu selectionné est invalide";
-    // check if the pegiAge enum value was valid
+        // check if the pegiAge enum value was valid
     } elseif ($pegiAge === null) {
         $error_msg = "La restriction PEGI selectionnée est invalide";
-    // check if the obligatory images are uploaded and if the upload is successfully
+        // check if the obligatory images are uploaded and if the upload is successfully
     } elseif (!isset($_FILES['gameTitlePic']) || $_FILES['gameTitlePic']['error'] !== UPLOAD_ERR_OK ||
-            !isset($_FILES['gameHeroPic']) || $_FILES['gameHeroPic']['error'] !== UPLOAD_ERR_OK) {
+        !isset($_FILES['gameHeroPic']) || $_FILES['gameHeroPic']['error'] !== UPLOAD_ERR_OK) {
         $error_msg = "Les images de titre et de hero sont obligatoires et doivent être valides";
-    // check if the game is not already in DB
+        // check if the game is not already in DB
     } elseif ($gameRepo->findByName($gameTitle) !== null) {
         $error_msg = "Un jeu avec le même titre existe déjà";
     }
@@ -86,14 +90,22 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['
         $uploadDir = $root_path . '/public/img/games/';
         if (!is_dir($uploadDir)) { mkdir($uploadDir, 0777, true);}
 
+        // Add the size of the gameTitlePic and gameHeroPic to $totalSize
+        $totalSize += $_FILES['gameTitlePic']['size'] + $_FILES['gameHeroPic']['size'];
+
         // Generate random unique names to avoid conflicts with file that have the same name
         $titlePicExtension = strtolower(pathinfo($_FILES['gameTitlePic']['name'], PATHINFO_EXTENSION));
         $heroPicExtension = strtolower(pathinfo($_FILES['gameHeroPic']['name'], PATHINFO_EXTENSION));
 
-        // Check if the images has an authorized extension
-        if (!in_array($titlePicExtension, $authorizedExtensions) || !in_array($heroPicExtension, $authorizedExtensions)) {
+        // Check the size of gameTitlePic and gameHeroPic
+        if ($_FILES['gameTitlePic']['size'] > $maxSizePerFile || $_FILES['gameHeroPic']['size'] > $maxSizePerFile) {
+            $error_msg = "L'image de titre ou hero dépasse la limite de 10MB";
+            // Check if the images has an authorized extension
+        } elseif (!in_array($titlePicExtension, $authorizedExtensions) || !in_array($heroPicExtension, $authorizedExtensions)) {
             $error_msg = "Erreur, seul les fichiers avec les extensions (.png, .jpg, .webp) sont authorisés";
         }
+
+
 
         $titlePicName = uniqid('title_') . '.' . $titlePicExtension;
         $heroPicName = uniqid('hero_')  . '.' . $heroPicExtension;
@@ -154,6 +166,24 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['
                         $fileCount = count($_FILES['gamePictures']['name']);
                         if ($fileCount > 6 ) {throw new Exception("Erreur lors de l'upload des images additionnelles. Veuillez réessayer.");}
 
+                        // Now we check the size of each file
+                        foreach($_FILES['gamePictures']['size'] as $index => $size) {
+                            // Check if the upload as failed (file to big for the PHP config)
+                            if ($_FILES['gamePictures']['error'][$index] === UPLOAD_ERR_INI_SIZE) {
+                                throw new Exception("Le fichier " . ($index + 1) . " dépasse la limite autorisée par PHP (10MB)");
+                            }
+                            // Check individual file size (in case the $maxSizePerFile change in the future and the PHP limit is higher than that)
+                            if ($size > $maxSizePerFile) {
+                                throw new Exception("Le fichier " . ($index + 1) . " dépasse 10MB");
+                            }
+                            $totalSize += $size;
+                        }
+                        // Check total size (titlePic + heroPic + gamePictures)
+                        if ($totalSize > $maxTotalSize) {
+                            throw new Exception("La taille totale des fichiers dépasse 50MB");
+                        }
+
+
                         // Set the loop limit dynamically
                         $loopLimit = min($fileCount, 6);
 
@@ -181,7 +211,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['
                     }
                     // And if every insert done is successfull (no error) we validate the transaction and redirect
                     $pdo->commit();
-                    header('Location: /public/admin/gameDashboard.php');
+                    header('Location: /admin/gameDashboard.php');
                     exit();
                 }
                 catch (Exception $exception) {
