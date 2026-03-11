@@ -52,7 +52,7 @@ $profilePicPath = $_SESSION['profilePicPath'] ?? 'img/profilePics/green_plumbob.
                 <!-- Logo plumbob par défaut -->
                 <a href="<?php echo $basePath; ?>index.php">
                     <img src="<?php echo  $basePath.$profilePicPath ?>"
-                         class="absolute w-16 h-16 object-contain transform -top-8 bg-[#2a5885] border-4 border-[#33b842] rounded-full p-2"
+                         class="absolute w-16 h-16 object-cover transform -top-8 bg-[#2a5885] border-4 border-[#33b842] rounded-full hover:scale-110 transition-transform"
                          alt="logo"
                          title="The Sims Den">
                 </a>
