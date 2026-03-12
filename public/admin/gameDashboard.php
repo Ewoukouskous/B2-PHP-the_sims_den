@@ -245,7 +245,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['
     if (isset($_POST['gameId'])) {
         $gameRepo = new GameRepository();
         // Check if the sent game exist
-        $game = $gameRepo->findById($_POST['gameId']);
+        $game = $gameRepo->findById((int)$_POST['gameId']);
 
         if ($game !== null) {
 
