@@ -15,10 +15,10 @@ require_once $root_path . '/src/Repository/PegiDescriptorRepository.php';
 
 
 // Check if the user is an admin, if not we redirect him to the index.php
-//if (!AuthMiddleware::is_admin($_SESSION)) {
-//    header('Location: /index.php');
-//    exit();
-//}
+if (!AuthMiddleware::is_admin($_SESSION)) {
+    header('Location: /index.php');
+    exit();
+}
 
 // Initiate usefully variables
 // All GameTypes
