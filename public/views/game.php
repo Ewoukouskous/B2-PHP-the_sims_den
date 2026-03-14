@@ -34,33 +34,24 @@ $gamePegiDescriptorRepository = new GamePegiDescriptorRepository();
 $pegiDescriptorRepository = new PegiDescriptorRepository();
 $gamePegiDescriptors = $gamePegiDescriptorRepository->findByGameId($gameId);
 $pegiDescriptors = [];
+// Associative array ('label' : 'path')
+$pegiDescriptorImages = [];
 
 foreach ($gamePegiDescriptors as $gamePegiDescriptor) {
     $pegiDescriptor = $pegiDescriptorRepository->findById($gamePegiDescriptor->getIdDescriptor());
     if ($pegiDescriptor !== null) {
         $pegiDescriptors[] = $pegiDescriptor;
+        // Get the label and normalize it
+        $label = $pegiDescriptor->getLabel();
+        $normalizedLabel = strtolower(str_replace(' ', '-', $label));
+        // Get the corresponding image name
+        $pegiDescriptorImages[$label] = $normalizedLabel . '.jpg';
     }
 }
 
-$pegiDescriptorImageByLabel = [
-    'Sexe' => 'sexual-content-black-EN.jpg',
-    'Violence' => 'violence-black-EN.jpg',
-    'Langage grossier' => 'bad-language-black-EN.jpg',
-    'Drogue' => 'drugs-black-EN.jpg',
-    'Peur' => 'fear-black-EN.jpg',
-    'Jeu de hasard' => 'gambling-black-EN.jpg'
-];
-
-$pegiAgeImageByValue = [
-    '3' => 'age-3-black_0.jpg',
-    '7' => 'age-7-black.jpg',
-    '12' => 'age-12-black.jpg',
-    '16' => 'age-16-black.jpg',
-    '18' => 'age-18-black 2_0.jpg'
-];
 
 $pegiAgeValue = $game->getPegiAge()->value;
-$pegiAgeImage = $pegiAgeImageByValue[$pegiAgeValue] ?? null;
+$pegiAgeImage = 'age-' . $pegiAgeValue . '.jpg';
 
 $typeLabel = match($game->getGameType()) {
     GameType::PC => 'PC',
@@ -160,7 +151,7 @@ $typeLabel = match($game->getGameType()) {
                                     <?php if ($pegiAgeImage !== null): ?>
                                         <img src="../img/pegi/age/<?php echo htmlspecialchars($pegiAgeImage); ?>"
                                              alt="PEGI <?php echo htmlspecialchars($pegiAgeValue); ?>"
-                                             class="w-16 h-16 rounded object-cover"
+                                             class="w-16 h-16 rounded"
                                              onerror="this.onerror=null; this.style.display='none';">
                                     <?php else: ?>
                                         <div class="w-16 h-16 bg-yellow-400 rounded flex items-center justify-center border-2 border-black">
@@ -169,20 +160,12 @@ $typeLabel = match($game->getGameType()) {
                                     <?php endif; ?>
                                 </div>
 
-                                <?php foreach ($pegiDescriptors as $pegiDescriptor): ?>
-                                    <?php $descriptorLabel = $pegiDescriptor->getLabel(); ?>
-                                    <?php $descriptorImage = $pegiDescriptorImageByLabel[$descriptorLabel] ?? null; ?>
+                                <?php foreach ($pegiDescriptorImages as $label => $image): ?>
                                     <div class="bg-white p-2 rounded-lg shadow-md">
-                                        <?php if ($descriptorImage !== null): ?>
-                                            <img src="../img/pegi/desc/<?php echo htmlspecialchars($descriptorImage); ?>"
-                                                 alt="Descripteur PEGI: <?php echo htmlspecialchars($descriptorLabel); ?>"
+                                            <img src="../img/pegi/desc/<?php echo htmlspecialchars($image); ?>"
+                                                 alt="Descripteur PEGI: <?php echo htmlspecialchars($label); ?>"
                                                  class="w-16 h-16 rounded object-cover"
                                                  onerror="this.onerror=null; this.style.display='none';">
-                                        <?php else: ?>
-                                            <div class="w-16 h-16 bg-black rounded flex items-center justify-center px-1 text-center">
-                                                <span class="text-[10px] font-semibold text-white leading-tight"><?php echo htmlspecialchars($descriptorLabel); ?></span>
-                                            </div>
-                                        <?php endif; ?>
                                     </div>
                                 <?php endforeach; ?>
 
