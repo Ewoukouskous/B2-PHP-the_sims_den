@@ -86,7 +86,6 @@ $typeLabel = match($game->getGameType()) {
 
         <div class="absolute top-28 w-full max-w-7xl px-4 pb-12">
 
-            <!-- Container principal avec le même style que la navbar -->
             <div class="bg-[#F0EEE9] bg-opacity-80 rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-8 m-8 space-y-8">
 
                 <!--            GAME HEADER Section-->
@@ -179,7 +178,6 @@ $typeLabel = match($game->getGameType()) {
                     </div>
                 </div>
 
-                <!-- Séparateur -->
                 <hr class="border-t-2 border-[#3769a9] opacity-20">
 
                 <!--            CONTENT Section-->
@@ -197,7 +195,6 @@ $typeLabel = match($game->getGameType()) {
                     </div>
                 </div>
 
-                <!-- Séparateur -->
                 <hr class="border-t-2 border-[#3769a9] opacity-20">
 
                 <!--            CAROUSEL Section-->
