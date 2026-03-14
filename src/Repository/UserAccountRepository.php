@@ -1,5 +1,9 @@
 <?php
 
+require_once __DIR__ . '/../Database/DatabaseConnection.php';
+require_once __DIR__ . '/../Model/UserAccount.php';
+require_once __DIR__ . '/../Enum/UserRole.php';
+
 class UserAccountRepository {
     // ATTRIBUTES
     private PDO $pdo;
