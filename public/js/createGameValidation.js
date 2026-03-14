@@ -31,6 +31,89 @@
         }
     }
 
+    function isValidSinglePhoto(file) {
+        return isMeaningfulFile(file)
+            && allowedExtensions.has(extensionOf(file.name))
+            && file.size <= maxPerFile;
+    }
+
+    function isValidGalleryPhoto(file) {
+        return isMeaningfulFile(file)
+            && allowedExtensions.has(extensionOf(file.name))
+            && file.size <= maxPerFile;
+    }
+
+    function getLabelTextNode(input) {
+        if (!input) {
+            return null;
+        }
+
+        const label = input.closest('label');
+        if (!label) {
+            return null;
+        }
+
+        return label.querySelector('span');
+    }
+
+    function setUploadVisualState(input, isValid, successText) {
+        if (!input) {
+            return;
+        }
+
+        const label = input.closest('label');
+        const textNode = getLabelTextNode(input);
+        if (!label || !textNode) {
+            return;
+        }
+
+        if (!textNode.dataset.baseText) {
+            textNode.dataset.baseText = textNode.textContent.trim();
+        }
+
+        if (isValid) {
+            label.style.borderColor = '#33b842';
+            textNode.textContent = textNode.dataset.baseText + ' - ' + successText;
+        } else {
+            label.style.borderColor = '#3769a9';
+            textNode.textContent = textNode.dataset.baseText;
+        }
+    }
+
+    function updateUploadStates() {
+        const titlePic = titlePicInput && titlePicInput.files ? titlePicInput.files[0] : null;
+        const heroPic = heroPicInput && heroPicInput.files ? heroPicInput.files[0] : null;
+        const galleryFilesRaw = galleryInput && galleryInput.files ? Array.from(galleryInput.files) : [];
+        const galleryFiles = galleryFilesRaw.filter(isMeaningfulFile);
+
+        setUploadVisualState(titlePicInput, isValidSinglePhoto(titlePic), 'importee');
+        setUploadVisualState(heroPicInput, isValidSinglePhoto(heroPic), 'importee');
+
+        let galleryOk = galleryFiles.length > 0 && galleryFiles.length <= 6;
+        galleryFiles.forEach(function (file) {
+            if (!isValidGalleryPhoto(file)) {
+                galleryOk = false;
+            }
+        });
+
+        const galleryText = galleryFiles.length > 0
+            ? galleryFiles.length + ' photo(s) importee(s)'
+            : 'importee';
+        setUploadVisualState(galleryInput, galleryOk, galleryText);
+    }
+
+    if (titlePicInput) {
+        titlePicInput.addEventListener('change', updateUploadStates);
+    }
+    if (heroPicInput) {
+        heroPicInput.addEventListener('change', updateUploadStates);
+    }
+    if (galleryInput) {
+        galleryInput.addEventListener('change', updateUploadStates);
+    }
+
+    updateUploadStates();
+
     form.addEventListener('submit', function (event) {
         const errors = [];
 
@@ -81,10 +164,11 @@
             errors.push('La taille totale des fichiers depasse 50MB.');
         }
 
+        updateUploadStates();
+
         if (errors.length > 0) {
             event.preventDefault();
             alert(errors.join('\n'));
         }
     });
 })();
-
