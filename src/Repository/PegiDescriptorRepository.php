@@ -1,5 +1,8 @@
 <?php
 
+require_once __DIR__ . '/../Database/DatabaseConnection.php';
+require_once __DIR__ . '/../Model/PegiDescriptor.php';
+
 class PegiDescriptorRepository {
     // ATTRIBUTES
     private PDO $pdo;
