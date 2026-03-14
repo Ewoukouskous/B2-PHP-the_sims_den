@@ -11,7 +11,7 @@ require_once $root_path . '/src/Database/DatabaseConnection.php';
 require_once $root_path . '/src/Security/AuthMiddleware.php';
 
 // Check if the user is already login, we redirect him to the index.php
-if (AuthMiddleware::is_connected($_SESSION)) {
+if (AuthMiddleware::is_connected()) {
     header('Location: ../index.php');
     exit();
 }

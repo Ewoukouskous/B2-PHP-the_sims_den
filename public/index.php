@@ -13,7 +13,7 @@ require_once $root_path . '/src/Enum/GameType.php';
 require_once $root_path . '/src/Enum/PegiAge.php';
 
 // Déterminer si l'utilisateur est connecté
-$isConnected = AuthMiddleware::is_connected($_SESSION);
+$isConnected = AuthMiddleware::is_connected();
 
 // Récupérer tous les jeux depuis la base de données
 $gameRepository = new GameRepository();

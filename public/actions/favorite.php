@@ -8,7 +8,7 @@ $root_path = dirname(__DIR__, 2);
 require_once $root_path . '/src/Security/AuthMiddleware.php';
 
 // Check if the user is connected, if not redirect to /public/auth/login.php
-if (!AuthMiddleware::is_connected($_SESSION)){
+if (!AuthMiddleware::is_connected()){
     header('Location: /auth/login.php');
     exit();
 }
