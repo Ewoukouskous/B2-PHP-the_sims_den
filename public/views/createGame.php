@@ -4,7 +4,10 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+// SELECT the actual DIR (public/views), and ask to go up to the root (2 levels)
 $root_path = dirname(__DIR__, 2);
+
+// DEPENDENCIES
 require_once $root_path . '/src/Security/AuthMiddleware.php';
 require_once $root_path . '/src/Database/DatabaseConnection.php';
 require_once $root_path . '/src/Model/Game.php';
@@ -96,8 +99,10 @@ function moveUploadedImage(array $file, string $prefix, string $uploadAbsoluteDi
     return $uploadRelativeDir . '/' . $uniqueName;
 }
 
+// Check if the user is connected
 $isConnected = AuthMiddleware::is_connected($_SESSION);
 
+// DYNAMIC CHOICES
 $gameTypes = GameType::cases();
 $pegiAges = [];
 foreach (PegiAge::cases() as $pegiAge) {
@@ -126,9 +131,9 @@ foreach ($pegiDescriptorRepository->findAll() as $pegiDescriptor) {
     $allowedDescriptorIds[$descriptorId] = true;
 }
 
-$errors = [];
-$successMessage = '';
-$formValues = [
+$error_msgs = [];
+$success_msg = '';
+$form_values = [
     'gameTitle' => '',
     'gameDesc' => '',
     'gamePrice' => '',
@@ -141,53 +146,54 @@ $allowedExtensions = ['png', 'jpg', 'jpeg', 'webp'];
 $maxSizePerFile = 10 * 1024 * 1024;
 $maxTotalUploadSize = 50 * 1024 * 1024;
 
+// If the request is a POST we start the game creation process
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'addGame') {
-    $formValues['gameTitle'] = trim((string)($_POST['gameTitle'] ?? ''));
-    $formValues['gameDesc'] = trim((string)($_POST['gameDesc'] ?? ''));
-    $formValues['gamePrice'] = trim((string)($_POST['gamePrice'] ?? ''));
-    $formValues['gameType'] = trim((string)($_POST['gameType'] ?? ''));
-    $formValues['gamePegiAge'] = trim((string)($_POST['gamePegiAge'] ?? ''));
+    $form_values['gameTitle'] = trim((string)($_POST['gameTitle'] ?? ''));
+    $form_values['gameDesc'] = trim((string)($_POST['gameDesc'] ?? ''));
+    $form_values['gamePrice'] = trim((string)($_POST['gamePrice'] ?? ''));
+    $form_values['gameType'] = trim((string)($_POST['gameType'] ?? ''));
+    $form_values['gamePegiAge'] = trim((string)($_POST['gamePegiAge'] ?? ''));
 
     $rawDescriptorIds = $_POST['gamePegiDescriptors'] ?? [];
     $rawDescriptorIds = is_array($rawDescriptorIds) ? $rawDescriptorIds : [];
 
-    if ($formValues['gameTitle'] === '') {
-        $errors[] = "Le titre est obligatoire.";
+    if ($form_values['gameTitle'] === '') {
+        $error_msgs[] = "Echec : Le titre est obligatoire.";
     }
 
-    if ($formValues['gameDesc'] === '') {
-        $errors[] = "La description est obligatoire.";
+    if ($form_values['gameDesc'] === '') {
+        $error_msgs[] = "Echec : La description est obligatoire.";
     }
 
-    if ($formValues['gamePrice'] === '' || !is_numeric($formValues['gamePrice']) || (float)$formValues['gamePrice'] < 0) {
-        $errors[] = "Le prix doit etre un nombre superieur ou egal a 0.";
+    if ($form_values['gamePrice'] === '' || !is_numeric($form_values['gamePrice']) || (float)$form_values['gamePrice'] < 0) {
+        $error_msgs[] = "Echec : Le prix doit etre un nombre superieur ou egal a 0.";
     }
 
     $selectedGameType = null;
     try {
-        $selectedGameType = GameType::from($formValues['gameType']);
+        $selectedGameType = GameType::from($form_values['gameType']);
     } catch (ValueError) {
-        $errors[] = "Le type de jeu selectionne est invalide.";
+        $error_msgs[] = "Echec : Le type de jeu selectionne est invalide.";
     }
 
     $selectedPegiAge = null;
     try {
-        $selectedPegiAge = PegiAge::from($formValues['gamePegiAge']);
+        $selectedPegiAge = PegiAge::from($form_values['gamePegiAge']);
     } catch (ValueError) {
-        $errors[] = "L'age PEGI selectionne est invalide.";
+        $error_msgs[] = "Echec : L'age PEGI selectionne est invalide.";
     }
 
     $selectedDescriptorIds = [];
     foreach ($rawDescriptorIds as $descriptorIdRaw) {
         $descriptorIdString = trim((string)$descriptorIdRaw);
         if ($descriptorIdString === '' || !ctype_digit($descriptorIdString)) {
-            $errors[] = "Un descripteur PEGI selectionne est invalide.";
+            $error_msgs[] = "Echec : Un descripteur PEGI selectionne est invalide.";
             continue;
         }
 
         $descriptorId = (int)$descriptorIdString;
         if (!isset($allowedDescriptorIds[$descriptorId])) {
-            $errors[] = "Un descripteur PEGI selectionne n'existe pas.";
+            $error_msgs[] = "Echec : Un descripteur PEGI selectionne n'existe pas.";
             continue;
         }
 
@@ -195,7 +201,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
     }
 
     $selectedDescriptorIds = array_values($selectedDescriptorIds);
-    $formValues['gamePegiDescriptors'] = array_map(static fn(int $id): string => (string)$id, $selectedDescriptorIds);
+    $form_values['gamePegiDescriptors'] = [];
+    foreach ($selectedDescriptorIds as $descriptorId) {
+        $form_values['gamePegiDescriptors'][] = (string)$descriptorId;
+    }
 
     $titlePic = $_FILES['gameTitlePic'] ?? null;
     $heroPic = $_FILES['gameHeroPic'] ?? null;
@@ -209,15 +218,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
     }
 
     if (!isUploadedFileMeaningful($titlePic)) {
-        $errors[] = "La photo secondaire (gameTitlePic) est obligatoire.";
+        $error_msgs[] = "Echec : La photo secondaire (gameTitlePic) est obligatoire.";
     }
 
     if (!isUploadedFileMeaningful($heroPic)) {
-        $errors[] = "La photo principale (gameHeroPic) est obligatoire.";
+        $error_msgs[] = "Echec : La photo principale (gameHeroPic) est obligatoire.";
     }
 
     if (count($galleryPictures) > 6) {
-        $errors[] = "Vous pouvez envoyer au maximum 6 images dans gamePictures.";
+        $error_msgs[] = "Echec : Vous pouvez envoyer au maximum 6 images dans gamePictures.";
     }
 
     $filesToValidate = [];
@@ -236,42 +245,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
     foreach ($filesToValidate as $fileLabel => $file) {
         $errorCode = (int)($file['error'] ?? UPLOAD_ERR_NO_FILE);
         if ($errorCode !== UPLOAD_ERR_OK) {
-            $errors[] = $fileLabel . ' : ' . mapUploadErrorMessage($errorCode);
+            $error_msgs[] = $fileLabel . ' : ' . mapUploadErrorMessage($errorCode);
             continue;
         }
 
         $size = (int)($file['size'] ?? 0);
         if ($size <= 0) {
-            $errors[] = $fileLabel . " : le fichier est vide.";
+            $error_msgs[] = $fileLabel . " : le fichier est vide.";
             continue;
         }
 
         if ($size > $maxSizePerFile) {
-            $errors[] = $fileLabel . " : taille maximale depassee (10MB).";
+            $error_msgs[] = $fileLabel . " : taille maximale depassee (10MB).";
         }
 
         $totalUploadSize += $size;
 
         $extension = strtolower((string)pathinfo((string)($file['name'] ?? ''), PATHINFO_EXTENSION));
         if (!in_array($extension, $allowedExtensions, true)) {
-            $errors[] = $fileLabel . " : format non autorise. Formats acceptes : png, jpg, jpeg, webp.";
+            $error_msgs[] = $fileLabel . " : format non autorise. Formats acceptes : png, jpg, jpeg, webp.";
         }
     }
 
     if ($totalUploadSize > $maxTotalUploadSize) {
-        $errors[] = "La taille totale des uploads depasse 50MB.";
+        $error_msgs[] = "Echec : La taille totale des uploads depasse 50MB.";
     }
 
-    if (empty($errors)) {
+    // If no errors, proceed with the upload and database insertion
+    if (empty($error_msgs)) {
         $uploadAbsoluteDir = $root_path . '/public/img/games';
         $uploadRelativeDir = 'img/games';
 
+        // Ensure the upload directory exists
         if (!is_dir($uploadAbsoluteDir) && !mkdir($uploadAbsoluteDir, 0775, true) && !is_dir($uploadAbsoluteDir)) {
-            $errors[] = "Impossible de preparer le dossier de destination des images.";
+            $error_msgs[] = "Impossible de preparer le dossier de destination des images.";
         } else {
             $uploadedRelativePaths = [];
 
             try {
+                // MOVE UPLOADED FILES TO DESTINATION
                 $titlePicPath = moveUploadedImage($titlePic, 'title', $uploadAbsoluteDir, $uploadRelativeDir);
                 $uploadedRelativePaths[] = $titlePicPath;
 
@@ -285,6 +297,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
                     $uploadedRelativePaths[] = $galleryPath;
                 }
 
+                // DATABASE INSERTION
                 $pdo = DatabaseConnection::getInstance();
                 $pdo->beginTransaction();
 
@@ -292,11 +305,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
                 $gameMediaRepository = new GameMediaRepository();
                 $gamePegiDescriptorRepository = new GamePegiDescriptorRepository();
 
+                // INSERT GAME DATA
                 $game = new Game(
-                    $formValues['gameTitle'],
-                    (float)$formValues['gamePrice'],
+                    $form_values['gameTitle'],
+                    (float)$form_values['gamePrice'],
                     $selectedGameType,
-                    $formValues['gameDesc'],
+                    $form_values['gameDesc'],
                     $heroPicPath,
                     $titlePicPath,
                     $selectedPegiAge
@@ -308,18 +322,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
                     throw new RuntimeException("Creation du jeu impossible.");
                 }
 
+                // INSERT MEDIA DATA
                 foreach ($galleryPaths as $galleryPath) {
                     $gameMediaRepository->insert(new GameMedia($galleryPath, $gameId));
                 }
 
+                // INSERT PEGI DESCRIPTORS
                 foreach ($selectedDescriptorIds as $descriptorId) {
                     $gamePegiDescriptorRepository->insert(new GamePegiDescriptor($gameId, $descriptorId));
                 }
 
                 $pdo->commit();
 
-                $successMessage = "Le jeu a ete ajoute avec succes.";
-                $formValues = [
+                $success_msg = "Le jeu a ete ajoute avec succes.";
+                $form_values = [
                     'gameTitle' => '',
                     'gameDesc' => '',
                     'gamePrice' => '',
@@ -327,12 +343,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
                     'gamePegiAge' => '',
                     'gamePegiDescriptors' => []
                 ];
-            } catch (Throwable $exception) {
+            } catch (Throwable) {
                 $pdo = DatabaseConnection::getInstance();
                 if ($pdo->inTransaction()) {
                     $pdo->rollBack();
                 }
 
+                // ROLLBACK: DELETE UPLOADED FILES ON ERROR
                 foreach ($uploadedRelativePaths as $uploadedRelativePath) {
                     $absolutePath = $root_path . '/public/' . $uploadedRelativePath;
                     if (is_file($absolutePath)) {
@@ -340,7 +357,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
                     }
                 }
 
-                $errors[] = "Echec lors de l'ajout du jeu. Merci de reessayer.";
+                $error_msgs[] = "Echec lors de l'ajout du jeu. Merci de reessayer.";
             }
         }
     }
@@ -369,7 +386,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
     include '../includes/header.php';
     ?>
 
-    <div class="absolute top-32 w-full max-w-7xl px-4 pb-4">
+    <div class="absolute top-28 w-full max-w-7xl px-4 pb-4">
 
         <div class="bg-[#F0EEE9] bg-opacity-95 rounded-[3rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] overflow-hidden">
 
@@ -381,17 +398,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
             <form method="post" action="" enctype="multipart/form-data" class="p-5 space-y-3" data-add-game-form>
                 <input type="hidden" name="action" value="addGame">
 
-                <?php if (!empty($errors)): ?>
+                <?php if (!empty($error_msgs)): ?>
                     <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg" role="alert">
-                        <?php foreach ($errors as $error): ?>
+                        <?php foreach ($error_msgs as $error): ?>
                             <p class="font-medium"><?php echo htmlspecialchars($error); ?></p>
                         <?php endforeach; ?>
                     </div>
                 <?php endif; ?>
 
-                <?php if ($successMessage !== ''): ?>
+                <?php if ($success_msg !== ''): ?>
                     <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg" role="status">
-                        <p class="font-medium"><?php echo htmlspecialchars($successMessage); ?></p>
+                        <p class="font-medium"><?php echo htmlspecialchars($success_msg); ?></p>
                     </div>
                 <?php endif; ?>
 
@@ -407,7 +424,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
                                    name="gameTitle"
                                    type="text"
                                    required
-                                   value="<?php echo htmlspecialchars($formValues['gameTitle']); ?>"
+                                   value="<?php echo htmlspecialchars($form_values['gameTitle']); ?>"
                                    placeholder="Nom du jeu"
                                    class="w-full bg-transparent text-[#3769a9] text-sm border-b-2 border-[#3769a9] outline-none placeholder:text-[#3769a9]/40 pb-0.5">
                         </div>
@@ -421,7 +438,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
                                       rows="1"
                                       required
                                       placeholder="Description du jeu"
-                                      class="w-full resize-none bg-transparent text-[#3769a9] text-sm border-b-2 border-[#3769a9] outline-none placeholder:text-[#3769a9]/40 pb-0.5"><?php echo htmlspecialchars($formValues['gameDesc']); ?></textarea>
+                                      class="w-full resize-none bg-transparent text-[#3769a9] text-sm border-b-2 border-[#3769a9] outline-none placeholder:text-[#3769a9]/40 pb-0.5"><?php echo htmlspecialchars($form_values['gameDesc']); ?></textarea>
                         </div>
 
                         <div>
@@ -434,7 +451,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
                                    step="0.01"
                                    min="0"
                                    required
-                                   value="<?php echo htmlspecialchars($formValues['gamePrice']); ?>"
+                                   value="<?php echo htmlspecialchars($form_values['gamePrice']); ?>"
                                    placeholder="0,00"
                                    class="w-full bg-transparent text-[#3769a9] text-sm border-b-2 border-[#3769a9] outline-none placeholder:text-[#3769a9]/40 pb-0.5">
                         </div>
@@ -452,7 +469,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
                                            name="gameType"
                                            value="<?php echo htmlspecialchars($typeValue); ?>"
                                            class="hidden peer/<?php echo htmlspecialchars($inputId); ?>"
-                                           <?php echo $formValues['gameType'] === $typeValue ? 'checked' : ''; ?>>
+                                           <?php echo $form_values['gameType'] === $typeValue ? 'checked' : ''; ?>>
                                     <label for="<?php echo htmlspecialchars($inputId); ?>"
                                            class="px-4 py-1 bg-[#F0EEE9] rounded-4xl text-[#33b842] text-sm font-bold border-2 border-[#3769a9] cursor-pointer transition duration-200 peer-checked/<?php echo htmlspecialchars($inputId); ?>:bg-[#33b842] peer-checked/<?php echo htmlspecialchars($inputId); ?>:text-white peer-checked/<?php echo htmlspecialchars($inputId); ?>:border-[#33b842]">
                                         <?php echo htmlspecialchars(getGameTypeLabel($gameType)); ?>
@@ -513,7 +530,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
                                        name="gamePegiAge"
                                        value="<?php echo htmlspecialchars($pegiAge['value']); ?>"
                                        class="hidden peer/<?php echo htmlspecialchars($inputId); ?>"
-                                       <?php echo $formValues['gamePegiAge'] === $pegiAge['value'] ? 'checked' : ''; ?>>
+                                       <?php echo $form_values['gamePegiAge'] === $pegiAge['value'] ? 'checked' : ''; ?>>
                                 <label for="<?php echo htmlspecialchars($inputId); ?>"
                                        class="bg-white p-1 rounded-xl border-2 border-transparent shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] cursor-pointer transition duration-200 peer-checked/<?php echo htmlspecialchars($inputId); ?>:border-[#33b842] peer-checked/<?php echo htmlspecialchars($inputId); ?>:scale-105">
                                     <img src="../img/pegi/age/<?php echo htmlspecialchars($pegiAge['image']); ?>"
@@ -530,7 +547,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
                         <div class="grid grid-cols-2 sm:grid-cols-3 gap-1">
                             <?php foreach ($pegiDescriptors as $pegiDescriptor): ?>
                                 <?php $inputId = 'descriptor' . $pegiDescriptor['id']; ?>
-                                <?php $isChecked = in_array((string)$pegiDescriptor['id'], $formValues['gamePegiDescriptors'], true); ?>
+                                <?php $isChecked = in_array((string)$pegiDescriptor['id'], $form_values['gamePegiDescriptors'], true); ?>
                                 <input type="checkbox"
                                        id="<?php echo htmlspecialchars($inputId); ?>"
                                        name="gamePegiDescriptors[]"
