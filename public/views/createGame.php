@@ -19,21 +19,7 @@ require_once $root_path . '/src/Repository/GamePegiDescriptorRepository.php';
 require_once $root_path . '/src/Repository/PegiDescriptorRepository.php';
 require_once $root_path . '/src/Enum/GameType.php';
 require_once $root_path . '/src/Enum/PegiAge.php';
-
-function normalizePegiLabelToFileName(string $label): string {
-    $normalized = trim($label);
-    $transliterated = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $normalized);
-
-    if ($transliterated !== false) {
-        $normalized = $transliterated;
-    }
-
-    $normalized = strtolower($normalized);
-    $normalized = preg_replace('/[^a-z0-9]+/', '-', $normalized);
-    $normalized = trim((string)$normalized, '-');
-
-    return ($normalized === '' ? 'pegi' : $normalized) . '.jpg';
-}
+require_once $root_path . '/src/Service/CreateGameRules.php';
 
 function getGameTypeLabel(GameType $gameType): string {
     return match ($gameType) {
@@ -43,50 +29,7 @@ function getGameTypeLabel(GameType $gameType): string {
     };
 }
 
-function mapUploadErrorMessage(int $errorCode): string {
-    return match ($errorCode) {
-        UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE => "Le fichier depasse la taille autorisee par le serveur.",
-        UPLOAD_ERR_PARTIAL => "Le fichier n'a ete envoye que partiellement.",
-        UPLOAD_ERR_NO_TMP_DIR => "Le dossier temporaire est introuvable.",
-        UPLOAD_ERR_CANT_WRITE => "Impossible d'ecrire le fichier sur le disque.",
-        UPLOAD_ERR_EXTENSION => "Un module PHP a bloque l'upload du fichier.",
-        default => "Erreur inconnue pendant l'upload."
-    };
-}
-
-function normalizeMultipleUploadField(?array $filesField): array {
-    if (!is_array($filesField) || !isset($filesField['name']) || !is_array($filesField['name'])) {
-        return [];
-    }
-
-    $normalized = [];
-    $count = count($filesField['name']);
-
-    for ($i = 0; $i < $count; $i++) {
-        $normalized[] = [
-            'name' => (string)($filesField['name'][$i] ?? ''),
-            'type' => (string)($filesField['type'][$i] ?? ''),
-            'tmp_name' => (string)($filesField['tmp_name'][$i] ?? ''),
-            'error' => (int)($filesField['error'][$i] ?? UPLOAD_ERR_NO_FILE),
-            'size' => (int)($filesField['size'][$i] ?? 0)
-        ];
-    }
-
-    return $normalized;
-}
-
-function isUploadedFileMeaningful(?array $file): bool {
-    if (!is_array($file)) {
-        return false;
-    }
-
-    $name = trim((string)($file['name'] ?? ''));
-    $size = (int)($file['size'] ?? 0);
-    $error = (int)($file['error'] ?? UPLOAD_ERR_NO_FILE);
-
-    return $error !== UPLOAD_ERR_NO_FILE && $name !== '' && $size > 0;
-}
-
+// Keep this function local because it handles file system side effects.
 function moveUploadedImage(array $file, string $prefix, string $uploadAbsoluteDir, string $uploadRelativeDir): string {
     $extension = strtolower((string)pathinfo((string)$file['name'], PATHINFO_EXTENSION));
     $uniqueName = $prefix . '-' . date('YmdHis') . '-' . bin2hex(random_bytes(5)) . '.' . $extension;
@@ -126,7 +69,7 @@ foreach ($pegiDescriptorRepository->findAll() as $pegiDescriptor) {
     $pegiDescriptors[] = [
         'id' => $descriptorId,
         'label' => $label,
-        'image' => normalizePegiLabelToFileName($label)
+        'image' => CreateGameRules::normalizePegiLabelToFileName($label)
     ];
     $allowedDescriptorIds[$descriptorId] = true;
 }
@@ -142,9 +85,9 @@ $form_values = [
     'gamePegiDescriptors' => []
 ];
 
-$allowedExtensions = ['png', 'jpg', 'jpeg', 'webp'];
-$maxSizePerFile = 10 * 1024 * 1024;
-$maxTotalUploadSize = 50 * 1024 * 1024;
+$allowedExtensions = CreateGameRules::ALLOWED_EXTENSIONS;
+$maxSizePerFile = CreateGameRules::MAX_SIZE_PER_FILE;
+$maxTotalUploadSize = CreateGameRules::MAX_TOTAL_UPLOAD_SIZE;
 
 // If the request is a POST we start the game creation process
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'addGame') {
@@ -208,20 +151,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
 
     $titlePic = $_FILES['gameTitlePic'] ?? null;
     $heroPic = $_FILES['gameHeroPic'] ?? null;
-    $galleryPicturesRaw = normalizeMultipleUploadField($_FILES['gamePictures'] ?? null);
+    $galleryPicturesRaw = CreateGameRules::normalizeMultipleUploadField($_FILES['gamePictures'] ?? null);
 
     $galleryPictures = [];
     foreach ($galleryPicturesRaw as $picture) {
-        if (isUploadedFileMeaningful($picture)) {
+        if (CreateGameRules::isUploadedFileMeaningful($picture)) {
             $galleryPictures[] = $picture;
         }
     }
 
-    if (!isUploadedFileMeaningful($titlePic)) {
+    if (!CreateGameRules::isUploadedFileMeaningful($titlePic)) {
         $error_msgs[] = "Echec : La photo secondaire (gameTitlePic) est obligatoire.";
     }
 
-    if (!isUploadedFileMeaningful($heroPic)) {
+    if (!CreateGameRules::isUploadedFileMeaningful($heroPic)) {
         $error_msgs[] = "Echec : La photo principale (gameHeroPic) est obligatoire.";
     }
 
@@ -230,10 +173,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
     }
 
     $filesToValidate = [];
-    if (isUploadedFileMeaningful($titlePic)) {
+    if (CreateGameRules::isUploadedFileMeaningful($titlePic)) {
         $filesToValidate['Photo secondaire'] = $titlePic;
     }
-    if (isUploadedFileMeaningful($heroPic)) {
+    if (CreateGameRules::isUploadedFileMeaningful($heroPic)) {
         $filesToValidate['Photo principale'] = $heroPic;
     }
 
@@ -245,7 +188,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
     foreach ($filesToValidate as $fileLabel => $file) {
         $errorCode = (int)($file['error'] ?? UPLOAD_ERR_NO_FILE);
         if ($errorCode !== UPLOAD_ERR_OK) {
-            $error_msgs[] = $fileLabel . ' : ' . mapUploadErrorMessage($errorCode);
+            $error_msgs[] = $fileLabel . ' : ' . CreateGameRules::mapUploadErrorMessage($errorCode);
             continue;
         }
 
@@ -261,7 +204,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
 
         $totalUploadSize += $size;
 
-        $extension = strtolower((string)pathinfo((string)($file['name'] ?? ''), PATHINFO_EXTENSION));
+        $extension = CreateGameRules::extensionFromFileName((string)($file['name'] ?? ''));
         if (!in_array($extension, $allowedExtensions, true)) {
             $error_msgs[] = $fileLabel . " : format non autorise. Formats acceptes : png, jpg, jpeg, webp.";
         }
