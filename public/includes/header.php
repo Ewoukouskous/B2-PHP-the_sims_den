@@ -19,7 +19,10 @@ $profilePicPath = $_SESSION['profilePicPath'] ?? 'img/profilePics/green_plumbob.
 
             <a href="<?php echo $basePath; ?>index.php">
                 <div id="logo" class="top-1/2 text-xl font-bold text-gray-800 p-1">
-                    <img src="<?php echo $basePath; ?>img/plumbob.webp" alt="website logo" class="w-8 h-8 object-contain">
+                    <img src="<?php echo $basePath; ?>img/plumbob.webp"
+                         alt="website logo"
+                         class="w-8 h-8 object-contain"
+                         onerror="this.onerror=null; this.style.display='none';">
                 </div>
             </a>
 
@@ -46,7 +49,8 @@ $profilePicPath = $_SESSION['profilePicPath'] ?? 'img/profilePics/green_plumbob.
                 <a href="#" title="<?php echo htmlspecialchars($username); ?>">
                     <img src="<?php echo $basePath . htmlspecialchars($profilePicPath); ?>"
                          class="absolute w-16 h-16 object-cover transform -top-8 bg-[#2a5885] border-4 border-[#33b842] rounded-full hover:scale-110 transition-transform"
-                         alt="Photo de profil de <?php echo htmlspecialchars($username); ?>">
+                         alt="Photo de profil de <?php echo htmlspecialchars($username); ?>"
+                         onerror="this.onerror=null; this.src='<?php echo $basePath; ?>img/profilePics/green_plumbob.png';">
                 </a>
             <?php else: ?>
                 <!-- Logo plumbob par défaut -->
@@ -54,7 +58,8 @@ $profilePicPath = $_SESSION['profilePicPath'] ?? 'img/profilePics/green_plumbob.
                     <img src="<?php echo  $basePath.$profilePicPath ?>"
                          class="absolute w-16 h-16 object-cover transform -top-8 bg-[#2a5885] border-4 border-[#33b842] rounded-full hover:scale-110 transition-transform"
                          alt="logo"
-                         title="The Sims Den">
+                         title="The Sims Den"
+                         onerror="this.onerror=null; this.src='<?php echo $basePath; ?>img/profilePics/green_plumbob.png';">
                 </a>
             <?php endif; ?>
 

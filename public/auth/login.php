@@ -75,8 +75,8 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 <body class="h-full m-0">
-<div id="background" class="fixed top-0 left-0 w-full h-full bg-cover bg-center">
-    <img src="../img/bg.png" alt="Background Image" class="w-full h-full object-cover">
+<div id="background" class="fixed top-0 left-0 w-full h-full bg-cover bg-center bg-[#3769a9]">
+    <img src="../img/bg.png" alt="Background Image" class="w-full h-full object-cover" onerror="this.style.display='none';">
 </div>
 
 <div id="content" class="relative flex flex-col items-center h-full p-3 pt-8">

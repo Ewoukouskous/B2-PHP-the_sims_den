@@ -12,6 +12,9 @@ class GamePegiDescriptorRepository {
 
     // METHODS
 
+    private function rowToGamePegiDescriptor(array $row) : GamePegiDescriptor {
+        return new GamePegiDescriptor((int)$row['id_game'], (int)$row['id_descriptor']);
+    }
 
     // CREATE : Insert a link row between game and pegi_descriptor (game_pegi_descriptor) in the database
     public function insert(GamePegiDescriptor $gamePegiDescriptor) : void {
@@ -44,6 +47,25 @@ class GamePegiDescriptorRepository {
         $row = $statement->fetch();
         // If $row isn't empty we return a GamePegiDescriptor object, else we return null
         return $row ? new GamePegiDescriptor($idGame, $idDescriptor) : null;
+    }
+
+    // READ [GAME ID] : Find all game_pegi_descriptor rows for one game
+    public function findByGameId(int $idGame) : array {
+        // We prepare the SQL request string with named parameters (to avoid SQL injections)
+        $sqlRequest = "SELECT * FROM game_pegi_descriptor WHERE id_game = :id_game;";
+        // We prepare the SQL request with the PDO connection
+        $statement = $this->pdo->prepare($sqlRequest);
+        // We execute the request
+        $statement->execute(['id_game' => $idGame]);
+        // We get all the rows resulted for our previous query
+        $rows = $statement->fetchAll();
+
+        $gamePegiDescriptors = [];
+        foreach($rows as $row) {
+            $gamePegiDescriptors[] = $this->rowToGamePegiDescriptor($row);
+        }
+
+        return $gamePegiDescriptors;
     }
 
     // UPDATE : Update a game_pegi_descriptor (NOT MEANT FOR USE : The id pair is a PRIMARY KEY, their not meant to be modified)

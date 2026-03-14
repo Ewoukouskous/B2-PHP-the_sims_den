@@ -28,8 +28,8 @@ $games = $gameRepository->findAll();
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 <body>
-    <div id="background" class="fixed top-0 left-0 w-full h-full bg-cover bg-center">
-        <img src="img/bg.png" alt="Background Image" class="w-full h-full object-cover">
+    <div id="background" class="fixed top-0 left-0 w-full h-full bg-cover bg-center bg-[#3769a9]">
+        <img src="img/bg.png" alt="Background Image" class="w-full h-full object-cover" onerror="this.style.display='none';">
     </div>
 
     <div id="content" class="relative flex justify-center h-screen p-4 pt-12">
@@ -83,12 +83,13 @@ $games = $gameRepository->findAll();
                 <div class="game-card relative group transition-transform duration-300 hover:-translate-y-2"
                      data-type="<?php echo strtolower($game->getGameType()->value); ?>">
 
-                <a href="#" class="block bg-white rounded-[2.5rem] p-3 shadow-lg border-b-8 border-[#33b842]">
+                <a href="views/game.php?id=<?php echo $game->getId(); ?>" class="block bg-white rounded-[2.5rem] p-3 shadow-lg border-b-8 border-[#33b842]">
 
                     <div class="relative h-48 w-full overflow-hidden rounded-[2rem]">
                         <img src="<?php echo htmlspecialchars($game->getImageHeroPath()); ?>"
                              alt="<?php echo htmlspecialchars($game->getGameName()); ?>"
-                             class="w-full h-full object-cover">
+                             class="w-full h-full object-cover"
+                             onerror="this.onerror=null; this.src='img/plumbob.webp';">
                     </div>
 
                     <div class="mt-4 mb-16 text-center">
