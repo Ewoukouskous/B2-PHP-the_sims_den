@@ -3,6 +3,7 @@
 $basePath = $basePath ?? '';
 $showLoginButton = !isset($showLoginButton) || $showLoginButton;
 $showProfilePic = $showProfilePic ?? false;
+$showAdminButton = $showAdminButton ?? false;
 $searchPlaceholder = $searchPlaceholder ?? 'Recherche :';
 
 $username = $_SESSION['username'] ?? '';
@@ -66,6 +67,15 @@ $profilePicPath = $_SESSION['profilePicPath'] ?? 'img/profilePics/green_plumbob.
         </div>
 
         <div id="right" class="col-start-5 col-span-3 flex flex-row-reverse items-center gap-4">
+
+            <?php if ($showAdminButton): ?>
+                <a href="<?php echo $basePath; ?>admin/games.php">
+                    <button type="button"
+                            class="px-6 py-1 bg-[#33b842] text-white rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] font-medium outline-none hover:bg-[#2a9636] transition duration-200 ease-in-out">
+                        Admin
+                    </button>
+                </a>
+            <?php endif; ?>
 
             <?php if ($showLoginButton): ?>
                 <a href="<?php echo $basePath; ?>auth/login.php">
