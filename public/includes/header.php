@@ -1,6 +1,6 @@
 <?php
 
-$basePath = $basePath ?? '';
+$basePath = $basePath ?? '/';
 $showLoginButton = !isset($showLoginButton) || $showLoginButton;
 $showProfilePic = $showProfilePic ?? false;
 $searchPlaceholder = $searchPlaceholder ?? 'Recherche :';
