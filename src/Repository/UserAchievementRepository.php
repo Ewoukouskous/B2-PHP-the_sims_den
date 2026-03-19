@@ -76,7 +76,19 @@ class UserAchievementRepository {
         return $userAchievements;
     }
 
-    // UPDATE : Update the is_achieved status to a user_achievement by using the id's pair
+    // READ [COUNT BY USER_ID] : Return the amount of Achievement that a user have
+    public function countByUserId(int $idUser) : int {
+        // We prepare the SQL request string with named parameters (to avoid SQL injections)
+        $sqlRequest = "SELECT COUNT(*) FROM user_achievement WHERE id_user = :id_user;";
+        // We prepare the SQL request with the PDO connection, "this->pdo->prepare()" return a PDOStatement object
+        $statement = $this->pdo->prepare($sqlRequest);
+        // We execute the request
+        $statement->execute(['id_user' => $idUser]);
+        // We now return the content of the first column (contain the count) of the execution
+        return (int)$statement->fetchColumn();
+    }
+
+    // UPDATE : Update the unlocked_at of a user_achievement by using the id's pair (normally not meant for use)
     public function update(UserAchievement $userAchievement) : void {
         // We prepare the SQL request string with named parameters (to avoid SQL injections)
         $sqlRequest = "UPDATE user_achievement 
