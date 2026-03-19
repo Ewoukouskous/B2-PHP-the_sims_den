@@ -35,6 +35,15 @@ class AchievementService {
         }
     }
 
+    // Unlock the 'SulSul !' welcome achievement
+    public function unlockWelcomeAchievement(int $idUser) : void {
+        // Get the achievement from the DB, check if exist and then insert the user_achievement
+        $achievement = $this->achievementRepository->findByName("SulSul !");
+        if ($achievement) {
+            $this->unlockAchievement($idUser, $achievement);
+        }
+    }
+
     // Check if 'favorite' achievement is unlocked, if yes call unlockAchievement
     public function checkFavoriteAchievements(int $idUser, int $idGame, string $action) : void {
         // Get all the achievement of the user and make a key->value array of it to check more easily if unlocked or not
