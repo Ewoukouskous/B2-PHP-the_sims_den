@@ -8,7 +8,9 @@ $root_path = __DIR__ . '/..';
 require_once $root_path . '/src/Security/AuthMiddleware.php';
 require_once $root_path . '/src/Database/DatabaseConnection.php';
 require_once $root_path . '/src/Model/Game.php';
+require_once $root_path . '/src/Model/UserFavorite.php';
 require_once $root_path . '/src/Repository/GameRepository.php';
+require_once $root_path . '/src/Repository/UserFavoriteRepository.php';
 require_once $root_path . '/src/Enum/GameType.php';
 require_once $root_path . '/src/Enum/PegiAge.php';
 require_once $root_path . '/src/Enum/UserRole.php';
@@ -17,10 +19,53 @@ require_once $root_path . '/src/Enum/UserRole.php';
 $isConnected = AuthMiddleware::is_connected($_SESSION);
 $userRole = $_SESSION['userRole'] ?? null;
 $isAdmin = $userRole === UserRole::ADMIN->value;
+$currentUserId = ($isConnected && isset($_SESSION['userId']) && is_numeric($_SESSION['userId'])) ? (int)$_SESSION['userId'] : null;
 
-// Récupérer tous les jeux depuis la base de données
 $gameRepository = new GameRepository();
+$userFavoriteRepository = new UserFavoriteRepository();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'addFavorite') {
+    if ($currentUserId === null) {
+        header('Location: auth/login.php');
+        exit();
+    }
+
+    $gameIdRaw = trim((string)($_POST['gameId'] ?? ''));
+    if ($gameIdRaw !== '' && ctype_digit($gameIdRaw)) {
+        $gameId = (int)$gameIdRaw;
+        $gameToFavorite = $gameRepository->findById($gameId);
+
+        if ($gameToFavorite !== null && $userFavoriteRepository->findByIdPair($currentUserId, $gameId) === null) {
+            $pdo = DatabaseConnection::getInstance();
+
+            try {
+                $pdo->beginTransaction();
+
+                $userFavoriteRepository->insert(new UserFavorite($currentUserId, $gameId));
+                $gameToFavorite->setFavoriteNumber($gameToFavorite->getFavoritesNumber() + 1);
+                $gameRepository->update($gameToFavorite);
+
+                $pdo->commit();
+            } catch (Throwable) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+            }
+        }
+    }
+
+    header('Location: index.php');
+    exit();
+}
+
 $games = $gameRepository->findAll();
+
+$favoriteGameIds = [];
+if ($currentUserId !== null) {
+    foreach ($userFavoriteRepository->findAllByUserId($currentUserId) as $favorite) {
+        $favoriteGameIds[$favorite->getIdGame()] = true;
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -84,10 +129,18 @@ $games = $gameRepository->findAll();
                 </div>
             <?php else: ?>
                 <?php foreach ($games as $game): ?>
+                <?php $gameId = (int)$game->getId(); $isFavorite = isset($favoriteGameIds[$gameId]); ?>
                 <div class="game-card relative group transition-transform duration-300 hover:-translate-y-2"
                      data-type="<?php echo strtolower($game->getGameType()->value); ?>">
 
-                <a href="views/game.php?id=<?php echo $game->getId(); ?>" class="block bg-white rounded-[2.5rem] p-3 shadow-lg border-b-8 border-[#33b842]">
+                <?php if ($isConnected && !$isFavorite): ?>
+                    <form id="favorite-form-<?php echo $gameId; ?>" method="post" action="index.php" class="hidden">
+                        <input type="hidden" name="action" value="addFavorite">
+                        <input type="hidden" name="gameId" value="<?php echo $gameId; ?>">
+                    </form>
+                <?php endif; ?>
+
+                <a href="views/game.php?id=<?php echo $gameId; ?>" class="block bg-white rounded-[2.5rem] p-3 shadow-lg border-b-8 border-[#33b842]">
 
                     <div class="relative h-48 w-full overflow-hidden rounded-[2rem]">
                         <img src="<?php echo htmlspecialchars($game->getImageHeroPath()); ?>"
@@ -119,11 +172,27 @@ $games = $gameRepository->findAll();
 
                         <div class="flex items-center gap-2">
                             <div class="relative flex flex-col items-center">
-                                <button class="pointer-events-auto bg-[#F0EEE9] p-2 rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] flex items-center justify-center hover:scale-110 transition-transform cursor-pointer">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#3769a9]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                    </svg>
-                                </button>
+                                <?php if ($isConnected): ?>
+                                    <?php if ($isFavorite): ?>
+                                        <button type="button" onclick="event.preventDefault(); event.stopPropagation(); return false;" class="pointer-events-auto bg-[#F0EEE9] p-2 rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] flex items-center justify-center cursor-default" aria-label="Deja en favoris">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                            </svg>
+                                        </button>
+                                    <?php else: ?>
+                                        <button type="button" onclick="event.preventDefault(); event.stopPropagation(); document.getElementById('favorite-form-<?php echo $gameId; ?>').submit();" class="pointer-events-auto bg-[#F0EEE9] p-2 rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] flex items-center justify-center hover:scale-110 transition-transform cursor-pointer" aria-label="Ajouter aux favoris">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#3769a9]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                            </svg>
+                                        </button>
+                                    <?php endif; ?>
+                                <?php else: ?>
+                                    <a href="auth/login.php" class="pointer-events-auto bg-[#F0EEE9] p-2 rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] flex items-center justify-center hover:scale-110 transition-transform cursor-pointer" aria-label="Se connecter pour ajouter aux favoris">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#3769a9]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                        </svg>
+                                    </a>
+                                <?php endif; ?>
                                 <span class="absolute -bottom-4 text-[9px] font-bold text-[#3769a9]"><?php echo $game->getFavoritesNumber(); ?></span>
                             </div>
 
