@@ -6,24 +6,38 @@ if (session_status() === PHP_SESSION_NONE) {
 
 $root_path = dirname(__DIR__, 2);
 require_once $root_path . '/src/Security/AuthMiddleware.php';
+require_once $root_path . '/src/Repository/UserFavoriteRepository.php';
+require_once $root_path . '/src/Repository/GameRepository.php';
+require_once $root_path . '/src/Enum/GameType.php';
 
 $isConnected = AuthMiddleware::is_connected($_SESSION);
 
-// Temporary for front end design
-$favoriteMockGames = [
-    [
-        'title' => 'Life and death',
-        'description' => 'Life and death',
-        'price' => '14.99 €',
-        'image' => '../img/games/hero-20260319182137-b66995cc45.jpg'
-    ],
-    [
-        'title' => 'Les Sims 4 - Vie et Mort',
-        'description' => 'Nouvelles histoires, carrières et événementsdz qdqzdqd qdhqdzdjhz qzdhqdkhdjzqdzq dzdkjdzqdhkqzdjzqd qzdkqdjhzqdkqzjdh dqdjkdhqjzkdhqzkdjqzd qk.',
-        'price' => '39.99 €',
-        'image' => '../img/games/hero-20260317174149-5e166815be.png'
-    ]
-];
+$favoriteGames = [];
+if ($isConnected && isset($_SESSION['userId']) && is_numeric($_SESSION['userId'])) {
+    $userFavoriteRepository = new UserFavoriteRepository();
+    $gameRepository = new GameRepository();
+
+    foreach ($userFavoriteRepository->findAllByUserId((int)$_SESSION['userId']) as $userFavorite) {
+        $game = $gameRepository->findById($userFavorite->getIdGame());
+        if ($game === null) {
+            continue;
+        }
+
+        $typeLabel = match($game->getGameType()) {
+            GameType::PC => 'PC',
+            GameType::CONSOLE => 'Console',
+            GameType::SMARTPHONE => 'Smartphone'
+        };
+
+        $favoriteGames[] = [
+            'title' => $game->getGameName(),
+            'description' => $game->getGameDesc(),
+            'price' => number_format($game->getPrice(), 2, ',', ' ') . ' €',
+            'image' => '../' . $game->getImageHeroPath(),
+            'type' => $typeLabel
+        ];
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -57,10 +71,16 @@ $favoriteMockGames = [
     include '../includes/header.php';
     ?>
 
-    <div class="absolute top-28 bottom-6 w-full max-w-7xl px-4 overflow-y-auto">
+    <div class="absolute top-28 bottom-6 w-full max-w-7xl px-4 overflow-y-auto pt-2">
 
         <div class="space-y-3 pb-2">
-            <?php foreach ($favoriteMockGames as $favorite): ?>
+            <?php if (empty($favoriteGames)): ?>
+                <section class="bg-[#F0EEE9] bg-opacity-90 rounded-[1.8rem] shadow-[0px_8px_0px_0px_rgba(51,184,66,0.9)] p-5 text-[#3769a9] text-xl font-medium text-center">
+                    Aucun jeu en favoris pour le moment.
+                </section>
+            <?php endif; ?>
+
+            <?php foreach ($favoriteGames as $favorite): ?>
                 <section class="bg-[#F0EEE9] bg-opacity-90 rounded-[1.8rem] shadow-[0px_8px_0px_0px_rgba(51,184,66,0.9)] p-2.5 md:p-3">
                     <article class="grid grid-cols-1 lg:grid-cols-[240px_1fr_150px] gap-3 items-center">
 
@@ -78,10 +98,7 @@ $favoriteMockGames = [
 
                             <div class="flex flex-wrap gap-1.5 px-1">
                                 <span class="bg-[#33b842] text-white text-xs font-bold px-2.5 py-0.5 rounded-full shadow-[0px_1px_0px_1px_rgba(0,0,0,0.08)] border border-white/20">
-                                    Pack d'extension
-                                </span>
-                                <span class="bg-[#33b842] text-white text-xs font-bold px-2.5 py-0.5 rounded-full shadow-[0px_1px_0px_1px_rgba(0,0,0,0.08)] border border-white/20">
-                                    Pack d'extension
+                                    <?php echo htmlspecialchars($favorite['type']); ?>
                                 </span>
                             </div>
 
