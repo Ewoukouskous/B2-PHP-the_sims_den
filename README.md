@@ -1,9 +1,0 @@
-## Prérequis
-
-### Configuration PHP requise (`php.ini`)
-
-```ini
-upload_max_filesize = 10M
-post_max_size = 50M
-max_file_uploads = 20
-```
