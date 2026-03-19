@@ -44,6 +44,19 @@ class AchievementService {
         }
     }
 
+    public function unlockSpecificAchievement(int $idUser, string $achievementName) : void {
+        // Get the achievement in the database and check if exist
+        $achievement = $this->achievementRepository->findByName($achievementName);
+        if ($achievement) {
+            // Check if the user already unlocked it
+            $alreadyUnlocked = $this->userAchievementRepository->findByIdPair($idUser,$achievement->getId());
+            // If not we unlock it
+            if ($alreadyUnlocked === null) {
+                $this->unlockAchievement($idUser, $achievement);
+            }
+        }
+    }
+
     // Check if 'favorite' achievement is unlocked, if yes call unlockAchievement
     public function checkFavoriteAchievements(int $idUser, int $idGame, string $action) : void {
         // Get all the achievement of the user and make a key->value array of it to check more easily if unlocked or not
