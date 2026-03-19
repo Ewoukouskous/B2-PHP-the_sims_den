@@ -30,6 +30,7 @@ if ($isConnected && isset($_SESSION['userId']) && is_numeric($_SESSION['userId']
         };
 
         $favoriteGames[] = [
+            'id' => $game->getId(),
             'title' => $game->getGameName(),
             'description' => $game->getGameDesc(),
             'price' => number_format($game->getPrice(), 2, ',', ' ') . ' €',
@@ -81,48 +82,50 @@ if ($isConnected && isset($_SESSION['userId']) && is_numeric($_SESSION['userId']
             <?php endif; ?>
 
             <?php foreach ($favoriteGames as $favorite): ?>
-                <section class="bg-[#F0EEE9] bg-opacity-90 rounded-[1.8rem] shadow-[0px_8px_0px_0px_rgba(51,184,66,0.9)] p-2.5 md:p-3">
-                    <article class="grid grid-cols-1 lg:grid-cols-[240px_1fr_150px] gap-3 items-center">
+                <a href="game.php?id=<?php echo (int)$favorite['id']; ?>" class="block">
+                    <section class="bg-[#F0EEE9] bg-opacity-90 rounded-[1.8rem] shadow-[0px_8px_0px_0px_rgba(51,184,66,0.9)] p-2.5 md:p-3 hover:-translate-y-0.5 transition-transform duration-200">
+                        <article class="grid grid-cols-1 lg:grid-cols-[240px_1fr_150px] gap-3 items-center">
 
-                        <div class="h-36 md:h-40 lg:h-34 rounded-[1rem] overflow-hidden">
-                            <img src="<?php echo htmlspecialchars($favorite['image']); ?>"
-                                 alt="<?php echo htmlspecialchars($favorite['title']); ?>"
-                                 class="w-full h-full object-cover"
-                                 onerror="this.onerror=null; this.src='../img/plumbob.webp';">
-                        </div>
-
-                        <div class="flex flex-col gap-2">
-                            <div class="bg-[#F0EEE9] rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] px-4 py-1.5 text-left text-[#3769a9] text-xl md:text-2xl font-medium leading-tight">
-                                <?php echo htmlspecialchars($favorite['title']); ?>
+                            <div class="h-36 md:h-40 lg:h-34 rounded-[1rem] overflow-hidden">
+                                <img src="<?php echo htmlspecialchars($favorite['image']); ?>"
+                                     alt="<?php echo htmlspecialchars($favorite['title']); ?>"
+                                     class="w-full h-full object-cover"
+                                     onerror="this.onerror=null; this.src='../img/plumbob.webp';">
                             </div>
 
-                            <div class="flex flex-wrap gap-1.5 px-1">
-                                <span class="bg-[#33b842] text-white text-xs font-bold px-2.5 py-0.5 rounded-full shadow-[0px_1px_0px_1px_rgba(0,0,0,0.08)] border border-white/20">
-                                    <?php echo htmlspecialchars($favorite['type']); ?>
-                                </span>
+                            <div class="flex flex-col gap-2">
+                                <div class="bg-[#F0EEE9] rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] px-4 py-1.5 text-left text-[#3769a9] text-xl md:text-2xl font-medium leading-tight">
+                                    <?php echo htmlspecialchars($favorite['title']); ?>
+                                </div>
+
+                                <div class="flex flex-wrap gap-1.5 px-1">
+                                    <span class="bg-[#33b842] text-white text-xs font-bold px-2.5 py-0.5 rounded-full shadow-[0px_1px_0px_1px_rgba(0,0,0,0.08)] border border-white/20">
+                                        <?php echo htmlspecialchars($favorite['type']); ?>
+                                    </span>
+                                </div>
+
+                                <div class="bg-[#F0EEE9] rounded-[1rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] px-4 py-2 text-left text-[#3769a9] text-lg md:text-xl font-medium h-[4.5rem] flex items-start justify-start overflow-hidden">
+                                    <p class="description-clamp w-full leading-tight text-left"><?php echo htmlspecialchars($favorite['description']); ?></p>
+                                </div>
                             </div>
 
-                            <div class="bg-[#F0EEE9] rounded-[1rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] px-4 py-2 text-left text-[#3769a9] text-lg md:text-xl font-medium h-[4.5rem] flex items-start justify-start overflow-hidden">
-                                <p class="description-clamp w-full leading-tight text-left"><?php echo htmlspecialchars($favorite['description']); ?></p>
+                            <div class="flex flex-col justify-center items-center gap-2.5 lg:pr-1">
+                                <button type="button"
+                                        aria-label="Retirer des favoris"
+                                        class="w-14 h-14 bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] flex items-center justify-center text-red-500 hover:scale-105 transition duration-200">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 21s-6.716-4.437-9.428-8.13A5.727 5.727 0 0 1 12 6.422a5.727 5.727 0 0 1 9.428 6.448C18.716 16.563 12 21 12 21z"/>
+                                    </svg>
+                                </button>
+
+                                <div class="w-full bg-[#F0EEE9] rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] px-3 py-1.5 text-center text-[#3769a9] text-2xl font-medium whitespace-nowrap">
+                                    <?php echo htmlspecialchars($favorite['price']); ?>
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="flex flex-col justify-center items-center gap-2.5 lg:pr-1">
-                            <button type="button"
-                                    aria-label="Retirer des favoris"
-                                    class="w-14 h-14 bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] flex items-center justify-center text-red-500 hover:scale-105 transition duration-200">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 21s-6.716-4.437-9.428-8.13A5.727 5.727 0 0 1 12 6.422a5.727 5.727 0 0 1 9.428 6.448C18.716 16.563 12 21 12 21z"/>
-                                </svg>
-                            </button>
-
-                            <div class="w-full bg-[#F0EEE9] rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] px-3 py-1.5 text-center text-[#3769a9] text-2xl font-medium whitespace-nowrap">
-                                <?php echo htmlspecialchars($favorite['price']); ?>
-                            </div>
-                        </div>
-
-                    </article>
-                </section>
+                        </article>
+                    </section>
+                </a>
             <?php endforeach; ?>
         </div>
 
