@@ -28,14 +28,19 @@ if($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['a
         // Check that the userId correspond to an actual user in the database
         $user = $userRepository->findById((int)$_POST['userId']);
         if(!is_null($user)) {
-            // We change the user role (admin/user)
-            $newRole = $user->getUserRole() === UserRole::USER ? UserRole::ADMIN : UserRole::USER;
-            $user->setUserRole($newRole);
-            // Then update the user in DB
-            $userRepository->update($user);
-            // Now we redirect
-            header("Location: /admin/userDashboard.php");
-            exit();
+            try {
+                // We change the user role (admin/user)
+                $newRole = $user->getUserRole() === UserRole::USER ? UserRole::ADMIN : UserRole::USER;
+                $user->setUserRole($newRole);
+                // Then update the user in DB
+                $userRepository->update($user);
+                // Now we redirect
+                header("Location: /admin/userDashboard.php");
+                exit();
+            } catch (Exception $exception) {
+                $error_msg = "Erreur lors de la mise à jour du rôle : " . $exception->getMessage();
+            }
+
         } else {
             $error_msg = "Erreur, l'utilisateur que vous essayez de promouvoir / révoquer n'existe pas";
         }
@@ -51,11 +56,20 @@ if($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['a
         // Check that the userId correspond to an actual user in the database
         $user = $userRepository->findById((int)$_POST['userId']);
         if(!is_null($user)) {
-            // We delete the user
-            $userRepository->delete($user->getId());
-            // Now we redirect
-            header("Location: /admin/userDashboard.php");
-            exit();
+            try {
+                // We delete the user
+                $userRepository->delete($user->getId());
+                // Try to unlock the related Achievement
+                require_once $root_path . '/src/Service/AchievementService.php';
+                $achievementService = new AchievementService();
+                $achievementService->unlockSpecificAchievement((int)$_SESSION['userId'], "Faucheuse");
+                // Now we redirect
+                header("Location: /admin/userDashboard.php");
+                exit();
+            } catch (Exception $exception) {
+                $error_msg = "Erreur lors de la suppression de l'utilisateur : " . $exception->getMessage();
+            }
+
         } else {
             $error_msg = "Erreur, l'utilisateur que vous essayé de supprimer n'existe pas";
         }
