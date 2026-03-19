@@ -2,49 +2,83 @@
     const modal = document.getElementById('deleteModal');
     const cancelBtn = document.getElementById('cancelBtn');
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-    const modalGameName = document.getElementById('modalGameName');
-    const deleteButtons = document.querySelectorAll('.admin-delete-btn');
-    let currentGameId = null;
-    // Open modal when delete button is clicked
-    deleteButtons.forEach(function (btn) {
+    const modalDeleteTitle = document.getElementById('modalDeleteTitle');
+    const modalDeleteQuestion = document.getElementById('modalDeleteQuestion');
+    const modalTargetName = document.getElementById('modalTargetName');
+
+    const deleteGameButtons = document.querySelectorAll('.admin-delete-btn');
+    const deleteUserButtons = document.querySelectorAll('.admin-delete-user-btn');
+
+    let currentDeleteRequest = null;
+
+    function openDeleteModal(config) {
+        currentDeleteRequest = config;
+        modalDeleteTitle.textContent = config.title;
+        modalDeleteQuestion.textContent = config.question;
+        modalTargetName.textContent = config.name;
+        modal.classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+        modal.classList.add('hidden');
+        currentDeleteRequest = null;
+    }
+
+    deleteGameButtons.forEach(function (btn) {
         btn.addEventListener('click', function () {
-            currentGameId = btn.getAttribute('data-game-id');
-            const gameName = btn.getAttribute('data-game-name');
-            modalGameName.textContent = gameName;
-            modal.classList.remove('hidden');
+            openDeleteModal({
+                action: 'deleteGame',
+                idField: 'gameId',
+                idValue: btn.getAttribute('data-game-id'),
+                title: 'EXIT GAME',
+                question: 'Etes-vous sur de vouloir supprimer le jeu ?',
+                name: btn.getAttribute('data-game-name') || ''
+            });
         });
     });
-    // Close modal on cancel
-    cancelBtn.addEventListener('click', function () {
-        modal.classList.add('hidden');
-        currentGameId = null;
+
+    deleteUserButtons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            openDeleteModal({
+                action: 'deleteUser',
+                idField: 'userId',
+                idValue: btn.getAttribute('data-user-id'),
+                title: 'EXIT USER',
+                question: 'Etes-vous sur de vouloir expulser cet utilisateur ?',
+                name: btn.getAttribute('data-user-name') || ''
+            });
+        });
     });
-    // Close modal on outside click
+
+    cancelBtn.addEventListener('click', closeDeleteModal);
+
     modal.addEventListener('click', function (event) {
         if (event.target === modal) {
-            modal.classList.add('hidden');
-            currentGameId = null;
+            closeDeleteModal();
         }
     });
-    // Confirm deletion
+
     confirmDeleteBtn.addEventListener('click', function () {
-        if (currentGameId === null) {
+        if (currentDeleteRequest === null || !currentDeleteRequest.idValue) {
             return;
         }
-        // Create form and submit
+
         const form = document.createElement('form');
         form.method = 'POST';
         form.style.display = 'none';
+
         const actionInput = document.createElement('input');
         actionInput.type = 'hidden';
         actionInput.name = 'action';
-        actionInput.value = 'deleteGame';
-        const gameIdInput = document.createElement('input');
-        gameIdInput.type = 'hidden';
-        gameIdInput.name = 'gameId';
-        gameIdInput.value = currentGameId;
+        actionInput.value = currentDeleteRequest.action;
+
+        const idInput = document.createElement('input');
+        idInput.type = 'hidden';
+        idInput.name = currentDeleteRequest.idField;
+        idInput.value = currentDeleteRequest.idValue;
+
         form.appendChild(actionInput);
-        form.appendChild(gameIdInput);
+        form.appendChild(idInput);
         document.body.appendChild(form);
         form.submit();
     });

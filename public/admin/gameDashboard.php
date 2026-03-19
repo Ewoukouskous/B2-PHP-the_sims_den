@@ -322,12 +322,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
     <title>Ajout d'un jeu - The Sims Den</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
-<body>
+<body class="h-screen overflow-hidden">
 <div id="background" class="fixed top-0 left-0 w-full h-full bg-cover bg-center bg-[#3769a9]">
     <img src="../img/bg.png" alt="Background Image" class="w-full h-full object-cover" onerror="this.style.display='none';">
 </div>
 
-<div id="content" class="relative flex justify-center min-h-screen p-4 pt-12">
+<div id="content" class="relative flex justify-center h-screen overflow-hidden p-4 pt-12 pb-6">
 
     <?php
     $basePath = '../';
@@ -337,16 +337,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
     include '../includes/header.php';
     ?>
 
-    <div class="absolute top-28 w-full max-w-7xl px-4 pb-4">
+    <div class="absolute top-28 bottom-6 w-full max-w-7xl px-4 overflow-hidden" style="padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));">
 
-        <div class="bg-[#F0EEE9] bg-opacity-95 rounded-[3rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] overflow-hidden">
+        <div class="bg-[#F0EEE9] bg-opacity-95 rounded-[3rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] overflow-hidden h-full flex flex-col">
 
             <div class="px-5 pt-3 pb-2">
                 <h1 class="text-2xl font-bold text-[#3769a9]">Ajout d'un jeu</h1>
             </div>
             <div class="h-1.5 bg-[#33b842]"></div>
 
-            <form method="post" action="" enctype="multipart/form-data" class="p-5 space-y-3" data-add-game-form>
+            <form method="post" action="" enctype="multipart/form-data" class="p-5 space-y-3 flex-1 min-h-0 overflow-y-auto" data-add-game-form>
                 <input type="hidden" name="action" value="addGame">
 
                 <?php if (!empty($error_msgs)): ?>
