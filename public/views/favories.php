@@ -6,18 +6,61 @@ if (session_status() === PHP_SESSION_NONE) {
 
 $root_path = dirname(__DIR__, 2);
 require_once $root_path . '/src/Security/AuthMiddleware.php';
+require_once $root_path . '/src/Database/DatabaseConnection.php';
+require_once $root_path . '/src/Model/UserFavorite.php';
 require_once $root_path . '/src/Repository/UserFavoriteRepository.php';
 require_once $root_path . '/src/Repository/GameRepository.php';
 require_once $root_path . '/src/Enum/GameType.php';
 
 $isConnected = AuthMiddleware::is_connected($_SESSION);
+$currentUserId = ($isConnected && isset($_SESSION['userId']) && is_numeric($_SESSION['userId'])) ? (int)$_SESSION['userId'] : null;
+
+$userFavoriteRepository = new UserFavoriteRepository();
+$gameRepository = new GameRepository();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'toggleFavorite') {
+    if ($currentUserId === null) {
+        header('Location: ../auth/login.php');
+        exit();
+    }
+
+    $gameIdRaw = trim((string)($_POST['gameId'] ?? ''));
+    if ($gameIdRaw !== '' && ctype_digit($gameIdRaw)) {
+        $gameId = (int)$gameIdRaw;
+        $gameToFavorite = $gameRepository->findById($gameId);
+
+        if ($gameToFavorite !== null) {
+            $existingFavorite = $userFavoriteRepository->findByIdPair($currentUserId, $gameId);
+            $pdo = DatabaseConnection::getInstance();
+
+            try {
+                $pdo->beginTransaction();
+
+                if ($existingFavorite === null) {
+                    $userFavoriteRepository->insert(new UserFavorite($currentUserId, $gameId));
+                    $gameToFavorite->setFavoriteNumber($gameToFavorite->getFavoritesNumber() + 1);
+                } else {
+                    $userFavoriteRepository->delete($currentUserId, $gameId);
+                    $gameToFavorite->setFavoriteNumber(max(0, $gameToFavorite->getFavoritesNumber() - 1));
+                }
+
+                $gameRepository->update($gameToFavorite);
+                $pdo->commit();
+            } catch (Throwable) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+            }
+        }
+    }
+
+    header('Location: favories.php');
+    exit();
+}
 
 $favoriteGames = [];
-if ($isConnected && isset($_SESSION['userId']) && is_numeric($_SESSION['userId'])) {
-    $userFavoriteRepository = new UserFavoriteRepository();
-    $gameRepository = new GameRepository();
-
-    foreach ($userFavoriteRepository->findAllByUserId((int)$_SESSION['userId']) as $userFavorite) {
+if ($currentUserId !== null) {
+    foreach ($userFavoriteRepository->findAllByUserId($currentUserId) as $userFavorite) {
         $game = $gameRepository->findById($userFavorite->getIdGame());
         if ($game === null) {
             continue;
@@ -83,6 +126,13 @@ if ($isConnected && isset($_SESSION['userId']) && is_numeric($_SESSION['userId']
 
             <?php foreach ($favoriteGames as $favorite): ?>
                 <a href="game.php?id=<?php echo (int)$favorite['id']; ?>" class="block">
+                    <?php if ($isConnected): ?>
+                        <form id="favorite-form-<?php echo (int)$favorite['id']; ?>" method="post" action="favories.php" class="hidden">
+                            <input type="hidden" name="action" value="toggleFavorite">
+                            <input type="hidden" name="gameId" value="<?php echo (int)$favorite['id']; ?>">
+                        </form>
+                    <?php endif; ?>
+
                     <section class="bg-[#F0EEE9] bg-opacity-90 rounded-[1.8rem] shadow-[0px_8px_0px_0px_rgba(51,184,66,0.9)] p-2.5 md:p-3 hover:-translate-y-0.5 transition-transform duration-200">
                         <article class="grid grid-cols-1 lg:grid-cols-[240px_1fr_150px] gap-3 items-center">
 
@@ -111,6 +161,7 @@ if ($isConnected && isset($_SESSION['userId']) && is_numeric($_SESSION['userId']
 
                             <div class="flex flex-col justify-center items-center gap-2.5 lg:pr-1">
                                 <button type="button"
+                                        onclick="event.preventDefault(); event.stopPropagation(); document.getElementById('favorite-form-<?php echo (int)$favorite['id']; ?>').submit();"
                                         aria-label="Retirer des favoris"
                                         class="w-14 h-14 bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] flex items-center justify-center text-red-500 hover:scale-105 transition duration-200">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="currentColor" viewBox="0 0 24 24">
