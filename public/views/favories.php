@@ -6,8 +6,6 @@ if (session_status() === PHP_SESSION_NONE) {
 
 $root_path = dirname(__DIR__, 2);
 require_once $root_path . '/src/Security/AuthMiddleware.php';
-require_once $root_path . '/src/Database/DatabaseConnection.php';
-require_once $root_path . '/src/Model/UserFavorite.php';
 require_once $root_path . '/src/Repository/UserFavoriteRepository.php';
 require_once $root_path . '/src/Repository/GameRepository.php';
 require_once $root_path . '/src/Enum/GameType.php';
@@ -17,46 +15,6 @@ $currentUserId = ($isConnected && isset($_SESSION['userId']) && is_numeric($_SES
 
 $userFavoriteRepository = new UserFavoriteRepository();
 $gameRepository = new GameRepository();
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'toggleFavorite') {
-    if ($currentUserId === null) {
-        header('Location: ../auth/login.php');
-        exit();
-    }
-
-    $gameIdRaw = trim((string)($_POST['gameId'] ?? ''));
-    if ($gameIdRaw !== '' && ctype_digit($gameIdRaw)) {
-        $gameId = (int)$gameIdRaw;
-        $gameToFavorite = $gameRepository->findById($gameId);
-
-        if ($gameToFavorite !== null) {
-            $existingFavorite = $userFavoriteRepository->findByIdPair($currentUserId, $gameId);
-            $pdo = DatabaseConnection::getInstance();
-
-            try {
-                $pdo->beginTransaction();
-
-                if ($existingFavorite === null) {
-                    $userFavoriteRepository->insert(new UserFavorite($currentUserId, $gameId));
-                    $gameToFavorite->setFavoriteNumber($gameToFavorite->getFavoritesNumber() + 1);
-                } else {
-                    $userFavoriteRepository->delete($currentUserId, $gameId);
-                    $gameToFavorite->setFavoriteNumber(max(0, $gameToFavorite->getFavoritesNumber() - 1));
-                }
-
-                $gameRepository->update($gameToFavorite);
-                $pdo->commit();
-            } catch (Throwable) {
-                if ($pdo->inTransaction()) {
-                    $pdo->rollBack();
-                }
-            }
-        }
-    }
-
-    header('Location: favories.php');
-    exit();
-}
 
 $favoriteGames = [];
 if ($currentUserId !== null) {
@@ -127,8 +85,8 @@ if ($currentUserId !== null) {
             <?php foreach ($favoriteGames as $favorite): ?>
                 <a href="game.php?id=<?php echo (int)$favorite['id']; ?>" class="block">
                     <?php if ($isConnected): ?>
-                        <form id="favorite-form-<?php echo (int)$favorite['id']; ?>" method="post" action="favories.php" class="hidden">
-                            <input type="hidden" name="action" value="toggleFavorite">
+                        <form id="favorite-form-<?php echo (int)$favorite['id']; ?>" method="post" action="../actions/favorite.php" class="hidden">
+                            <input type="hidden" name="action" value="delete">
                             <input type="hidden" name="gameId" value="<?php echo (int)$favorite['id']; ?>">
                         </form>
                     <?php endif; ?>

@@ -6,11 +6,9 @@ if (session_status() === PHP_SESSION_NONE) {
 
 $root_path = dirname(__DIR__, 2);
 require_once $root_path . '/src/Security/AuthMiddleware.php';
-require_once $root_path . '/src/Database/DatabaseConnection.php';
 require_once $root_path . '/src/Model/Game.php';
 require_once $root_path . '/src/Model/GamePegiDescriptor.php';
 require_once $root_path . '/src/Model/PegiDescriptor.php';
-require_once $root_path . '/src/Model/UserFavorite.php';
 require_once $root_path . '/src/Repository/GameRepository.php';
 require_once $root_path . '/src/Repository/GamePegiDescriptorRepository.php';
 require_once $root_path . '/src/Repository/PegiDescriptorRepository.php';
@@ -26,47 +24,6 @@ $gameId = isset($_GET['id']) ? (int)$_GET['id'] : 1;
 
 $gameRepository = new GameRepository();
 $userFavoriteRepository = new UserFavoriteRepository();
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'toggleFavorite') {
-    if ($currentUserId === null) {
-        header('Location: ../auth/login.php');
-        exit();
-    }
-
-    $postedGameIdRaw = trim((string)($_POST['gameId'] ?? ''));
-    if ($postedGameIdRaw !== '' && ctype_digit($postedGameIdRaw)) {
-        $postedGameId = (int)$postedGameIdRaw;
-        $postedGame = $gameRepository->findById($postedGameId);
-
-        if ($postedGame !== null) {
-            $existingFavorite = $userFavoriteRepository->findByIdPair($currentUserId, $postedGameId);
-            $pdo = DatabaseConnection::getInstance();
-
-            try {
-                $pdo->beginTransaction();
-
-                if ($existingFavorite === null) {
-                    $userFavoriteRepository->insert(new UserFavorite($currentUserId, $postedGameId));
-                    $postedGame->setFavoriteNumber($postedGame->getFavoritesNumber() + 1);
-                } else {
-                    $userFavoriteRepository->delete($currentUserId, $postedGameId);
-                    $postedGame->setFavoriteNumber(max(0, $postedGame->getFavoritesNumber() - 1));
-                }
-
-                $gameRepository->update($postedGame);
-                $pdo->commit();
-            } catch (Throwable) {
-                if ($pdo->inTransaction()) {
-                    $pdo->rollBack();
-                }
-            }
-        }
-    }
-
-    header('Location: game.php?id=' . $gameId);
-    exit();
-}
-
 $game = $gameRepository->findById($gameId);
 
 // If the game is not found, redirect to the homepage
@@ -75,10 +32,13 @@ if (!$game) {
     exit();
 }
 
-$isFavorite = false;
+$favoriteGameIds = [];
 if ($currentUserId !== null) {
-    $isFavorite = $userFavoriteRepository->findByIdPair($currentUserId, $gameId) !== null;
+    foreach ($userFavoriteRepository->findAllByUserId($currentUserId) as $favorite) {
+        $favoriteGameIds[$favorite->getIdGame()] = true;
+    }
 }
+$isFavorite = isset($favoriteGameIds[$gameId]);
 
 $gamePegiDescriptorRepository = new GamePegiDescriptorRepository();
 $pegiDescriptorRepository = new PegiDescriptorRepository();
@@ -103,11 +63,6 @@ foreach ($gamePegiDescriptors as $gamePegiDescriptor) {
 $pegiAgeValue = $game->getPegiAge()->value;
 $pegiAgeImage = 'age-' . $pegiAgeValue . '.jpg';
 
-$typeLabel = match($game->getGameType()) {
-    GameType::PC => 'PC',
-    GameType::CONSOLE => 'Console',
-    GameType::SMARTPHONE => 'Smartphone'
-};
 ?>
 
 <!DOCTYPE html>
@@ -187,12 +142,15 @@ $typeLabel = match($game->getGameType()) {
 
                                 <div class="flex flex-col items-center">
                                     <?php if ($isConnected): ?>
-                                        <form id="favorite-form" method="post" action="game.php?id=<?php echo $gameId; ?>" class="hidden">
-                                            <input type="hidden" name="action" value="toggleFavorite">
+                                        <form id="favorite-form" method="post" action="../actions/favorite.php" class="hidden">
+                                            <input type="hidden" name="action" value="<?php echo $isFavorite ? 'delete' : 'add'; ?>">
                                             <input type="hidden" name="gameId" value="<?php echo $gameId; ?>">
+                                            <?php if (!$isFavorite): ?>
+                                                <input type="hidden" name="playtimeHours" value="0">
+                                            <?php endif; ?>
                                         </form>
                                         <button type="button"
-                                                onclick="document.getElementById('favorite-form').submit();"
+                                                onclick="return submitFavoriteForm(event, 'favorite-form', <?php echo $isFavorite ? 'false' : 'true'; ?>);"
                                                 class="bg-white p-3 rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] hover:scale-110 transition-transform"
                                                 aria-label="<?php echo $isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'; ?>">
                                             <?php if ($isFavorite): ?>
@@ -297,6 +255,8 @@ $typeLabel = match($game->getGameType()) {
         </div>
 
     </div>
+
+    <script src="../js/favoriteForm.js"></script>
 </body>
 </html>
 

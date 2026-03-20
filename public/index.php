@@ -6,9 +6,7 @@ if (session_status() === PHP_SESSION_NONE) {
 
 $root_path = __DIR__ . '/..';
 require_once $root_path . '/src/Security/AuthMiddleware.php';
-require_once $root_path . '/src/Database/DatabaseConnection.php';
 require_once $root_path . '/src/Model/Game.php';
-require_once $root_path . '/src/Model/UserFavorite.php';
 require_once $root_path . '/src/Repository/GameRepository.php';
 require_once $root_path . '/src/Repository/UserFavoriteRepository.php';
 require_once $root_path . '/src/Enum/GameType.php';
@@ -23,46 +21,6 @@ $currentUserId = ($isConnected && isset($_SESSION['userId']) && is_numeric($_SES
 
 $gameRepository = new GameRepository();
 $userFavoriteRepository = new UserFavoriteRepository();
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'toggleFavorite') {
-    if ($currentUserId === null) {
-        header('Location: auth/login.php');
-        exit();
-    }
-
-    $gameIdRaw = trim((string)($_POST['gameId'] ?? ''));
-    if ($gameIdRaw !== '' && ctype_digit($gameIdRaw)) {
-        $gameId = (int)$gameIdRaw;
-        $gameToFavorite = $gameRepository->findById($gameId);
-
-        if ($gameToFavorite !== null) {
-            $existingFavorite = $userFavoriteRepository->findByIdPair($currentUserId, $gameId);
-            $pdo = DatabaseConnection::getInstance();
-
-            try {
-                $pdo->beginTransaction();
-
-                if ($existingFavorite === null) {
-                    $userFavoriteRepository->insert(new UserFavorite($currentUserId, $gameId));
-                    $gameToFavorite->setFavoriteNumber($gameToFavorite->getFavoritesNumber() + 1);
-                } else {
-                    $userFavoriteRepository->delete($currentUserId, $gameId);
-                    $gameToFavorite->setFavoriteNumber(max(0, $gameToFavorite->getFavoritesNumber() - 1));
-                }
-
-                $gameRepository->update($gameToFavorite);
-                $pdo->commit();
-            } catch (Throwable) {
-                if ($pdo->inTransaction()) {
-                    $pdo->rollBack();
-                }
-            }
-        }
-    }
-
-    header('Location: index.php');
-    exit();
-}
 
 $games = $gameRepository->findAll();
 
@@ -140,9 +98,12 @@ if ($currentUserId !== null) {
                      data-type="<?php echo strtolower($game->getGameType()->value); ?>">
 
                 <?php if ($isConnected): ?>
-                    <form id="favorite-form-<?php echo $gameId; ?>" method="post" action="index.php" class="hidden">
-                        <input type="hidden" name="action" value="toggleFavorite">
+                    <form id="favorite-form-<?php echo $gameId; ?>" method="post" action="actions/favorite.php" class="hidden">
+                        <input type="hidden" name="action" value="<?php echo $isFavorite ? 'delete' : 'add'; ?>">
                         <input type="hidden" name="gameId" value="<?php echo $gameId; ?>">
+                        <?php if (!$isFavorite): ?>
+                            <input type="hidden" name="playtimeHours" value="0">
+                        <?php endif; ?>
                     </form>
                 <?php endif; ?>
 
@@ -180,13 +141,13 @@ if ($currentUserId !== null) {
                             <div class="relative flex flex-col items-center">
                                 <?php if ($isConnected): ?>
                                     <?php if ($isFavorite): ?>
-                                        <button type="button" onclick="event.preventDefault(); event.stopPropagation(); document.getElementById('favorite-form-<?php echo $gameId; ?>').submit();" class="pointer-events-auto bg-[#F0EEE9] p-2 rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] flex items-center justify-center hover:scale-110 transition-transform cursor-pointer" aria-label="Retirer des favoris">
+                                        <button type="button" onclick="return submitFavoriteForm(event, 'favorite-form-<?php echo $gameId; ?>', false);" class="pointer-events-auto bg-[#F0EEE9] p-2 rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] flex items-center justify-center hover:scale-110 transition-transform cursor-pointer" aria-label="Retirer des favoris">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500" fill="currentColor" viewBox="0 0 24 24">
                                                 <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                                             </svg>
                                         </button>
                                     <?php else: ?>
-                                        <button type="button" onclick="event.preventDefault(); event.stopPropagation(); document.getElementById('favorite-form-<?php echo $gameId; ?>').submit();" class="pointer-events-auto bg-[#F0EEE9] p-2 rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] flex items-center justify-center hover:scale-110 transition-transform cursor-pointer" aria-label="Ajouter aux favoris">
+                                        <button type="button" onclick="return submitFavoriteForm(event, 'favorite-form-<?php echo $gameId; ?>', true);" class="pointer-events-auto bg-[#F0EEE9] p-2 rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] flex items-center justify-center hover:scale-110 transition-transform cursor-pointer" aria-label="Ajouter aux favoris">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#3769a9]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                                             </svg>
@@ -219,6 +180,8 @@ if ($currentUserId !== null) {
 
     </div>
 
+    <script src="js/favoriteForm.js"></script>
     <script src="js/filters.js"></script>
 </body>
 </html>
+
