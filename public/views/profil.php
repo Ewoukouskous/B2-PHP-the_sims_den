@@ -6,21 +6,70 @@ if (session_status() === PHP_SESSION_NONE) {
 
 $root_path = dirname(__DIR__, 2);
 require_once $root_path . '/src/Security/AuthMiddleware.php';
+require_once $root_path . '/src/Model/UserAccount.php';
+require_once $root_path . '/src/Model/ProfilePic.php';
+require_once $root_path . '/src/Model/Game.php';
+require_once $root_path . '/src/Repository/UserAccountRepository.php';
+require_once $root_path . '/src/Repository/ProfilePicRepository.php';
+require_once $root_path . '/src/Repository/UserFavoriteRepository.php';
+require_once $root_path . '/src/Repository/GameRepository.php';
+require_once $root_path . '/src/Repository/UserAchievementRepository.php';
+require_once $root_path . '/src/Enum/GameType.php';
+require_once $root_path . '/src/Enum/UserRole.php';
 
 $isConnected = AuthMiddleware::is_connected($_SESSION);
+$currentUserId = ($isConnected && isset($_SESSION['userId']) && is_numeric($_SESSION['userId'])) ? (int)$_SESSION['userId'] : null;
 
-$username = $_SESSION['username'] ?? 'SulSul_123';
-$profilePicPath = $_SESSION['profilePicPath'] ?? 'img/profilePics/green_plumbob.png';
-$memberSince = $_SESSION['memberSince'] ?? 'dd/MM/yyyy';
-$favoritesCount = 18;
-$achievementsCount = 10;
+$userAccountRepository = new UserAccountRepository();
+$profilePicRepository = new ProfilePicRepository();
+$userFavoriteRepository = new UserFavoriteRepository();
+$gameRepository = new GameRepository();
+$userAchievementRepository = new UserAchievementRepository();
 
-$favoriteGames = [
-    ['title' => 'Life and Death', 'type' => "Pack d'extension", 'price' => '14,99 €', 'favorites' => 621, 'image' => '../img/plumbob.webp'],
-    ['title' => 'Life and Death', 'type' => "Pack d'extension", 'price' => '14,99 €', 'favorites' => 621, 'image' => '../img/plumbob.webp'],
-    ['title' => 'Life and Death', 'type' => "Pack d'extension", 'price' => '14,99 €', 'favorites' => 621, 'image' => '../img/plumbob.webp'],
-    ['title' => 'Life and Death', 'type' => "Pack d'extension", 'price' => '14,99 €', 'favorites' => 621, 'image' => '../img/plumbob.webp'],
-];
+$userAccount = $currentUserId !== null ? $userAccountRepository->findById($currentUserId) : null;
+
+$username = $userAccount?->getUsername() ?? 'Invité';
+$memberSince = $userAccount?->getDateJoined()->format('d/m/Y') ?? '--/--/----';
+
+$profilePicPath = 'img/profilePics/green_plumbob.png';
+if ($userAccount !== null) {
+    $profilePic = $profilePicRepository->findById($userAccount->getIdProfilePic());
+    if ($profilePic !== null) {
+        $profilePicPath = $profilePic->getPicturePath();
+    }
+}
+
+$favoriteGames = [];
+$favoritesCount = 0;
+if ($currentUserId !== null) {
+    foreach ($userFavoriteRepository->findAllByUserId($currentUserId) as $userFavorite) {
+        $game = $gameRepository->findById($userFavorite->getIdGame());
+        if ($game === null) {
+            continue;
+        }
+        $favoritesCount++;
+        $typeLabel = match ($game->getGameType()) {
+            GameType::PC => 'PC',
+            GameType::CONSOLE => 'Console',
+            GameType::SMARTPHONE => 'Smartphone',
+        };
+        $favoriteGames[] = [
+            'id'        => $game->getId(),
+            'title'     => $game->getGameName(),
+            'type'      => $typeLabel,
+            'price'     => number_format($game->getPrice(), 2, ',', ' ') . ' €',
+            'favorites' => $game->getFavoritesNumber(),
+            'image'     => '../' . $game->getImageHeroPath(),
+        ];
+    }
+}
+
+$favoriteGames = array_slice($favoriteGames, 0, 4);
+
+$achievementsCount = 0;
+if ($currentUserId !== null) {
+    $achievementsCount = count($userAchievementRepository->findAchievedByUserId($currentUserId));
+}
 ?>
 
 <!DOCTYPE html>
@@ -80,7 +129,7 @@ $favoriteGames = [
                         <h2 class="text-2xl font-bold text-[#3769a9] pb-1 inline-block border-b-2 border-[#33b842] w-fit">
                             Infos :
                         </h2>
-                        <div class="flex flex-col gap-1.5 text-[#3769a9] font-semibold text-sm">
+                        <div class="flex flex-col gap-1.5 text-[#3769a9] font-semibold text-base">
                             <p>Membre depuis le : <span class="font-bold"><?php echo htmlspecialchars($memberSince); ?></span></p>
                             <p>Nombre de favoris : <span class="font-bold"><?php echo $favoritesCount; ?></span></p>
                             <p>Nombre de succès : <span class="font-bold"><?php echo $achievementsCount; ?></span></p>
@@ -96,7 +145,7 @@ $favoriteGames = [
                         Favoris :
                     </h2>
 
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 min-h-[14rem]">
                         <?php foreach ($favoriteGames as $favorite): ?>
                             <div class="group relative bg-white rounded-[1.5rem] p-2.5 shadow-[0px_4px_0px_0px_rgba(51,184,66,0.9)] hover:-translate-y-1 transition-transform duration-200 cursor-pointer flex flex-col gap-2 h-[14rem]">
 
@@ -130,7 +179,16 @@ $favoriteGames = [
 
                             </div>
                         <?php endforeach; ?>
+
+                        <?php for ($i = count($favoriteGames); $i < 4; $i++): ?>
+                            <div class="h-[14rem] rounded-[1.5rem] border-2 border-dashed border-[#3769a9] border-opacity-20 flex items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-[#3769a9] opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                </svg>
+                            </div>
+                        <?php endfor; ?>
                     </div>
+
                 </div>
 
             </div>
