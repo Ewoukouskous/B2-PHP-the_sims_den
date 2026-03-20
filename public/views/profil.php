@@ -147,7 +147,7 @@ if ($currentUserId !== null) {
 
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 min-h-[14rem]">
                         <?php foreach ($favoriteGames as $favorite): ?>
-                            <div class="group relative bg-white rounded-[1.5rem] p-2.5 shadow-[0px_4px_0px_0px_rgba(51,184,66,0.9)] hover:-translate-y-1 transition-transform duration-200 cursor-pointer flex flex-col gap-2 h-[14rem]">
+                            <a href="game.php?id=<?php echo (int)$favorite['id']; ?>" class="group relative bg-white rounded-[1.5rem] p-2.5 shadow-[0px_4px_0px_0px_rgba(51,184,66,0.9)] hover:-translate-y-1 transition-transform duration-200 flex flex-col gap-2 h-[14rem]">
 
                                 <div class="h-28 w-full overflow-hidden rounded-[1rem]">
                                     <img src="<?php echo htmlspecialchars($favorite['image']); ?>"
@@ -177,7 +177,7 @@ if ($currentUserId !== null) {
                                     </div>
                                 </div>
 
-                            </div>
+                            </a>
                         <?php endforeach; ?>
 
                         <?php for ($i = count($favoriteGames); $i < 4; $i++): ?>
