@@ -227,6 +227,196 @@ if ($currentUserId !== null) {
         </div>
 
     </div>
+
+    <div id="edit-modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center hidden"
+        style="background: rgba(30, 50, 90, 0.55); backdrop-filter: blur(4px);">
+
+        <div
+            class="relative bg-[#F0EEE9] bg-opacity-98 rounded-[2rem] shadow-[0px_8px_0px_0px_rgba(51,184,66,0.9)] w-full max-w-lg mx-4 mt-8">
+
+            <div class="absolute -top-6 left-1/2 -translate-x-1/2 z-10">
+                <span
+                    class="text-2xl font-bold text-[#3769a9] bg-[#F0EEE9] inline-block px-10 py-2 rounded-full shadow-[0px_2px_0px_1.5px_rgba(51,184,66,1)] whitespace-nowrap">
+                    Modifier le profil
+                </span>
+            </div>
+
+            <button type="button" id="close-edit-modal"
+                class="absolute top-3 right-4 w-8 h-8 bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] flex items-center justify-center text-[#3769a9] hover:ring-2 hover:ring-[#3769a9] hover:ring-opacity-50 transition duration-200">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <div class="pt-8 px-5 pb-5 space-y-2.5">
+
+                <div class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1.5">
+                    <p class="text-[#3769a9] font-bold text-sm border-b-2 border-[#33b842] pb-0.5 w-fit">Photo de profil
+                    </p>
+                    <div class="flex items-center justify-around gap-2">
+                        <?php
+                        $pics = [
+                            ['path' => 'img/profilePics/green_plumbob.png', 'label' => 'Vert'],
+                            ['path' => 'img/profilePics/cyan_plumbob.png', 'label' => 'Cyan'],
+                            ['path' => 'img/profilePics/orange_plumbob.png', 'label' => 'Orange'],
+                            ['path' => 'img/profilePics/red_plumbob.png', 'label' => 'Rouge'],
+                        ];
+                        foreach ($pics as $pic): ?>
+                            <label class="cursor-pointer flex flex-col items-center gap-1 group">
+                                <input type="radio" name="profile_pic" value="<?php echo htmlspecialchars($pic['path']); ?>"
+                                    class="hidden peer" <?php echo ($profilePicPath === $pic['path']) ? 'checked' : ''; ?>>
+                                <div
+                                    class="w-10 h-10 rounded-full border-2 border-transparent peer-checked:border-[#33b842] overflow-hidden shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] transition duration-200 group-hover:scale-105">
+                                    <img src="../<?php echo htmlspecialchars($pic['path']); ?>"
+                                        alt="<?php echo $pic['label']; ?>" class="w-full h-full object-cover"
+                                        onerror="this.onerror=null; this.src='../img/profilePics/green_plumbob.png';">
+                                </div>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                    <div class="flex justify-end mt-1">
+                        <button type="button"
+                            class="px-5 py-1 bg-[#3769a9] hover:bg-[#2a5885] text-white text-xs font-bold rounded-full shadow-lg transition duration-200 hover:scale-105">
+                            Enregistrer
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1">
+                    <label for="edit-username"
+                        class="block text-[#3769a9] font-bold text-sm border-b-2 border-[#33b842] pb-0.5 w-fit">Nom
+                        d'utilisateur</label>
+                    <input type="text" id="edit-username" name="username"
+                        value="<?php echo htmlspecialchars($username); ?>"
+                        class="w-full px-4 py-1.5 text-sm bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-[#3769a9] font-medium outline-none focus:ring-2 focus:ring-[#3769a9] focus:ring-opacity-50 transition duration-200">
+                    <div class="flex justify-end pt-1">
+                        <button type="button"
+                            class="px-5 py-1 bg-[#3769a9] hover:bg-[#2a5885] text-white text-xs font-bold rounded-full shadow-lg transition duration-200 hover:scale-105">
+                            Enregistrer
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1">
+                    <label for="edit-email"
+                        class="block text-[#3769a9] font-bold text-sm border-b-2 border-[#33b842] pb-0.5 w-fit">Adresse
+                        e-mail</label>
+                    <input type="email" id="edit-email" name="email"
+                        value="<?php echo htmlspecialchars($userAccount?->getEmail() ?? ''); ?>"
+                        class="w-full px-4 py-1.5 text-sm bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-[#3769a9] font-medium outline-none focus:ring-2 focus:ring-[#3769a9] focus:ring-opacity-50 transition duration-200">
+                    <div class="flex justify-end pt-1">
+                        <button type="button"
+                            class="px-5 py-1 bg-[#3769a9] hover:bg-[#2a5885] text-white text-xs font-bold rounded-full shadow-lg transition duration-200 hover:scale-105">
+                            Enregistrer
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1">
+                    <p class="text-[#3769a9] font-bold text-sm border-b-2 border-[#33b842] pb-0.5 w-fit">Mot de passe
+                    </p>
+                    <div class="relative pb-2">
+                        <input type="password" id="edit-password" name="password" placeholder="Nouveau mot de passe"
+                            class="w-full px-4 py-1.5 pr-10 text-sm bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-[#3769a9] font-medium outline-none focus:ring-2 focus:ring-[#3769a9] focus:ring-opacity-50 transition duration-200">
+                        <button type="button" id="toggle-edit-password"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-[#3769a9] hover:text-[#2a5885] transition duration-200"
+                            aria-label="Afficher/Masquer">
+                            <svg id="eye-edit" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            <svg id="eye-slash-edit" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 hidden"
+                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="relative">
+                        <input type="password" id="edit-password-confirm" name="password_confirm"
+                            placeholder="Confirmer le mot de passe"
+                            class="w-full px-4 py-1.5 pr-10 text-sm bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-[#3769a9] font-medium outline-none focus:ring-2 focus:ring-[#3769a9] focus:ring-opacity-50 transition duration-200">
+                        <button type="button" id="toggle-edit-password-confirm"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-[#3769a9] hover:text-[#2a5885] transition duration-200"
+                            aria-label="Afficher/Masquer">
+                            <svg id="eye-edit-confirm" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            <svg id="eye-slash-edit-confirm" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 hidden"
+                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                            </svg>
+                        </button>
+                    </div>
+                    <p id="password-mismatch-msg" class="text-red-500 text-[10px] font-semibold hidden px-2">Les mots de
+                        passe ne correspondent pas.</p>
+                    <div class="flex justify-end pt-1">
+                        <button type="button" id="save-password-btn"
+                            class="px-5 py-1 bg-[#3769a9] hover:bg-[#2a5885] text-white text-xs font-bold rounded-full shadow-lg transition duration-200 hover:scale-105">
+                            Enregistrer
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const overlay = document.getElementById('edit-modal-overlay');
+        const openBtn = document.querySelector('button[title="Modifier le profil"]');
+        const closeBtn = document.getElementById('close-edit-modal');
+
+        openBtn.addEventListener('click', () => overlay.classList.remove('hidden'));
+        closeBtn.addEventListener('click', () => overlay.classList.add('hidden'));
+        overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.add('hidden'); });
+
+        const togglePwd = (inputId, eyeId, slashId) => {
+            const input = document.getElementById(inputId);
+            const eye = document.getElementById(eyeId);
+            const slash = document.getElementById(slashId);
+            if (!input) return;
+            document.getElementById('toggle-' + inputId.replace('edit-', 'edit-'))?.addEventListener('click', () => {
+                input.type = input.type === 'password' ? 'text' : 'password';
+                eye.classList.toggle('hidden');
+                slash.classList.toggle('hidden');
+            });
+        };
+
+        document.getElementById('toggle-edit-password')?.addEventListener('click', () => {
+            const input = document.getElementById('edit-password');
+            input.type = input.type === 'password' ? 'text' : 'password';
+            document.getElementById('eye-edit').classList.toggle('hidden');
+            document.getElementById('eye-slash-edit').classList.toggle('hidden');
+        });
+
+        document.getElementById('toggle-edit-password-confirm')?.addEventListener('click', () => {
+            const input = document.getElementById('edit-password-confirm');
+            input.type = input.type === 'password' ? 'text' : 'password';
+            document.getElementById('eye-edit-confirm').classList.toggle('hidden');
+            document.getElementById('eye-slash-edit-confirm').classList.toggle('hidden');
+        });
+
+        document.getElementById('save-password-btn')?.addEventListener('click', () => {
+            const pwd = document.getElementById('edit-password').value;
+            const confirm = document.getElementById('edit-password-confirm').value;
+            const msg = document.getElementById('password-mismatch-msg');
+            if (pwd !== confirm) {
+                msg.classList.remove('hidden');
+            } else {
+                msg.classList.add('hidden');
+            }
+        });
+    </script>
 </body>
 
 </html>
