@@ -58,11 +58,7 @@ foreach ($gamePegiDescriptors as $gamePegiDescriptor) {
 $pegiAgeValue = $game->getPegiAge()->value;
 $pegiAgeImage = 'age-' . $pegiAgeValue . '.jpg';
 
-$typeLabel = match ($game->getGameType()) {
-    GameType::PC => 'PC',
-    GameType::CONSOLE => 'Console',
-    GameType::SMARTPHONE => 'Smartphone'
-};
+
 ?>
 
 <!DOCTYPE html>
@@ -129,8 +125,8 @@ $typeLabel = match ($game->getGameType()) {
 
                             <div class="flex flex-col items-start gap-4">
                                 <span
-                                    class="bg-[#33b842] text-white text-sm font-bold px-8 py-3 rounded-full shadow-[0px_2px_0px_1.5px_rgba(0,0,0,0.1)] border border-white/20">
-                                    <?php echo htmlspecialchars($typeLabel); ?>
+                                    class="bg-[#33b842] text-white text-sm font-bold px-8 py-3 rounded-full shadow-[0px_2px_0px_1.5px_rgba(0,0,0,0.1)] border border-white/20 capitalize">
+                                    <?php echo htmlspecialchars($game->getGameType()->value); ?>
                                 </span>
                                 <div class="w-full h-1 bg-[#33b842] rounded"></div>
                             </div>
