@@ -279,7 +279,11 @@ $canEditSelectedUserRole = $canDeleteSelectedUser;
                                         </div>
 
                                         <div class="flex-1">
-                                            <h2 class="text-xl font-bold text-[#3769a9]"><?php echo htmlspecialchars($game->getGameName()); ?></h2>
+                                            <h2 class="text-xl font-bold text-[#3769a9]">
+                                                <a href="../views/game.php?id=<?php echo $game->getId(); ?>" class="hover:underline hover:text-blue-700 transition-colors">
+                                                    <?php echo htmlspecialchars($game->getGameName()); ?>
+                                                </a>
+                                            </h2>
                                             <p class="text-sm text-gray-600 line-clamp-1"><?php echo htmlspecialchars($game->getGameDesc()); ?></p>
                                             <div class="flex gap-3 mt-2">
                                                 <span class="text-xs bg-[#33b842] text-white px-3 py-1 rounded-full font-medium capitalize">
