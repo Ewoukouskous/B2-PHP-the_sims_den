@@ -257,7 +257,7 @@ $canEditSelectedUserRole = $canDeleteSelectedUser;
                     <a href="gameDashboard.php">
                         <button type="button"
                                 class="px-8 py-3 bg-[#33b842] text-white font-bold rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(0,0,0,0.1)] border border-white/20 hover:bg-[#2a9636] transition duration-200 ease-in-out">
-                            + Creer un jeu
+                            + Créer un jeu
                         </button>
                     </a>
                 </div>
@@ -295,7 +295,7 @@ $canEditSelectedUserRole = $canDeleteSelectedUser;
 
                                     <div class="flex items-center gap-6 flex-shrink-0">
                                         <div class="text-right">
-                                            <p class="text-2xl font-bold text-[#33b842]"><?php echo number_format($game->getPrice(), 2, ',', ' '); ?> EUR</p>
+                                            <p class="text-2xl font-bold text-[#33b842]"><?php echo number_format($game->getPrice(), 2, ',', ' '); ?> €</p>
                                         </div>
 
                                         <button type="button"

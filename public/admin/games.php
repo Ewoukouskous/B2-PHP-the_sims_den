@@ -138,7 +138,7 @@ $games = $gameRepository->findAll();
                     <a href="gameDashboard.php">
                         <button type="button"
                                 class="px-8 py-3 bg-[#33b842] text-white font-bold rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(0,0,0,0.1)] border border-white/20 hover:bg-[#2a9636] transition duration-200 ease-in-out">
-                            + Cr├®er un jeu
+                            + Créer un jeu
                         </button>
                     </a>
                 </div>
@@ -148,7 +148,7 @@ $games = $gameRepository->findAll();
                     <?php if (empty($games)): ?>
                         <div class="text-center py-16">
                             <p class="text-2xl text-[#3769a9] font-bold">
-                                Aucun jeu cr├®├® pour le moment
+                                Aucun jeu créé pour le moment
                             </p>
                         </div>
                     <?php else: ?>
@@ -189,7 +189,7 @@ $games = $gameRepository->findAll();
                                     <div class="flex items-center gap-6 flex-shrink-0">
                                         <div class="text-right">
                                             <p class="text-2xl font-bold text-[#33b842]">
-                                                <?php echo number_format($game->getPrice(), 2, ',', ' '); ?> Ôé¼
+                                                <?php echo number_format($game->getPrice(), 2, ',', ' '); ?> €
                                             </p>
                                         </div>
 
