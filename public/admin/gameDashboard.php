@@ -411,7 +411,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 7a2 2 0 012-2h3l1.5-2h5L16 5h3a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
                                         <circle cx="12" cy="12" r="3.5" stroke-width="1.8"></circle>
                                     </svg>
-                                    <span class="text-sm md:text-base lg:text-sm font-medium text-[#3769a9]">Photo principale<span class="text-red-500">*</span></span>
+                                    <span class="text-sm md:text-base lg:text-sm font-medium text-[#3769a9]">Image Hero<span class="text-red-500">*</span></span>
                                 </div>
                                 <div id="heroPreviewContainer" class="hidden absolute inset-0 bg-[#F0EEE9] flex flex-col items-center justify-center p-1">
                                     <img id="heroPreview" class="h-16 w-auto object-contain rounded" src="" alt="preview">
@@ -426,7 +426,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 7a2 2 0 012-2h3l1.5-2h5L16 5h3a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
                                         <circle cx="12" cy="12" r="3.5" stroke-width="1.8"></circle>
                                     </svg>
-                                    <span class="text-sm md:text-base lg:text-sm font-medium text-[#3769a9]">Photo secondaire<span class="text-red-500">*</span></span>
+                                    <span class="text-sm md:text-base lg:text-sm font-medium text-[#3769a9]">Image Title<span class="text-red-500">*</span></span>
                                 </div>
                                 <div id="titlePreviewContainer" class="hidden absolute inset-0 bg-[#F0EEE9] flex flex-col items-center justify-center p-1">
                                     <img id="titlePreview" class="h-16 w-auto object-contain rounded" src="" alt="preview">
