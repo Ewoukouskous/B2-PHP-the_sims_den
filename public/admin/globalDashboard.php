@@ -461,7 +461,7 @@ $canEditSelectedUserRole = $canDeleteSelectedUser;
     </div>
 </div>
 
-<script src="../js/adminGames.js"></script>
+<script src="../js/adminDashboard.js"></script>
 </body>
 </html>
 
