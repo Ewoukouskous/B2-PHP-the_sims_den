@@ -22,13 +22,6 @@ if (!AuthMiddleware::is_admin($_SESSION)) {
     exit();
 }
 
-function formatUserRoleLabel(UserRole $role): string {
-    return match ($role) {
-        UserRole::ADMIN => 'Administrateur',
-        UserRole::USER => 'Utilisateur'
-    };
-}
-
 function formatShortDate(?DateTime $date): string {
     if ($date === null) {
         return 'Jamais';
@@ -54,66 +47,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
     exit();
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'deleteUser') {
-    $userIdRaw = $_POST['userId'] ?? '';
-    $userIdString = trim((string)$userIdRaw);
-    $currentUserId = isset($_SESSION['userId']) ? (int)$_SESSION['userId'] : null;
+$error_msg = "";
+$userRepository = new UserAccountRepository();
 
-    if ($userIdString !== '' && ctype_digit($userIdString)) {
-        $userId = (int)$userIdString;
-        // Security guard: an admin cannot delete their own account from this screen.
-        if ($currentUserId === null || $userId !== $currentUserId) {
-            $userRepository = new UserAccountRepository();
-            if ($userRepository->findById($userId) !== null) {
-                $userRepository->delete($userId);
+// Check if it's a POST request that contain a 'action' field that contains 'changeUserRole' and 'userId'
+if($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['action'] === 'changeUserRole' && isset($_POST['userId'])) {
+    // Check that the request isn't for the user that initiate it (so you can't demote yourself)
+    if ((int)$_POST['userId'] !== (int)$_SESSION['userId']) {
+        // Check that the userId correspond to an actual user in the database
+        $userToUpdate = $userRepository->findById((int)$_POST['userId']);
+        if(!is_null($userToUpdate)) {
+            // We change the user role with the select value
+            $newRoleRaw = strtolower(trim((string)($_POST['newUserRole'] ?? '')));
+            try {
+                $newRole = UserRole::from($newRoleRaw);
+                $userToUpdate->setUserRole($newRole);
+                // Then update the user in DB
+                $userRepository->update($userToUpdate);
+                // Now we redirect
+                header("Location: globalDashboard.php?tab=users&selectedUser=" . $userToUpdate->getId());
+                exit();
+            } catch (ValueError) {
+                $error_msg = "Erreur, le rôle sélectionné est invalide.";
             }
+        } else {
+            $error_msg = "Erreur, l'utilisateur que vous essayez de modifier n'existe pas.";
         }
+    } else {
+        $error_msg = "Erreur, il est impossible de modifier le rôle de votre propre compte.";
     }
-
-    header('Location: globalDashboard.php?tab=users');
-    exit();
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'changeUserRole') {
-    $userIdRaw = $_POST['userId'] ?? '';
-    $userIdString = trim((string)$userIdRaw);
-    $newRoleRaw = strtolower(trim((string)($_POST['newUserRole'] ?? '')));
-    $currentUserId = isset($_SESSION['userId']) ? (int)$_SESSION['userId'] : null;
-
-    $redirectUrl = 'globalDashboard.php?tab=users';
-    if ($userIdString !== '' && ctype_digit($userIdString)) {
-        $redirectUrl .= '&selectedUser=' . $userIdString;
-    }
-
-    if ($userIdString !== '' && ctype_digit($userIdString)) {
-        $userId = (int)$userIdString;
-
-        $newRole = null;
-        try {
-            $newRole = UserRole::from($newRoleRaw);
-        } catch (ValueError) {
-            $newRole = null;
+// Check if it's a POST request that contain a 'action' field that contains 'deleteUser' and 'userId'
+if($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['action'] === 'deleteUser' && isset($_POST['userId'])) {
+    // Check that the request isn't for the user that initiate it (so you can't delete yourself)
+    if ((int)$_POST['userId'] !== (int)$_SESSION['userId']) {
+        // Check that the userId correspond to an actual user in the database
+        $userToDelete = $userRepository->findById((int)$_POST['userId']);
+        if(!is_null($userToDelete)) {
+            // We delete the user
+            $userRepository->delete($userToDelete->getId());
+            // Now we redirect
+            header("Location: globalDashboard.php?tab=users");
+            exit();
+        } else {
+            $error_msg = "Erreur, l'utilisateur que vous essayez de supprimer n'existe pas.";
         }
-
-        if ($newRole !== null && ($currentUserId === null || $userId !== $currentUserId)) {
-            $userRepository = new UserAccountRepository();
-            $userToUpdate = $userRepository->findById($userId);
-
-            if ($userToUpdate !== null) {
-                $userToUpdate->setUserRole($newRole);
-                $userRepository->update($userToUpdate);
-            }
-        }
+    } else {
+        $error_msg = "Erreur, il est impossible de supprimer votre propre compte.";
     }
-
-    header('Location: ' . $redirectUrl);
-    exit();
 }
 
 $gameRepository = new GameRepository();
 $games = $gameRepository->findAll();
-
-$userRepository = new UserAccountRepository();
 $profilePicRepository = new ProfilePicRepository();
 $userAchievementRepository = new UserAchievementRepository();
 $userFavoriteRepository = new UserFavoriteRepository();
@@ -133,7 +119,7 @@ foreach ($users as $user) {
     $userRows[$userId] = [
         'id' => $userId,
         'username' => $user->getUsername(),
-        'roleLabel' => formatUserRoleLabel($user->getUserRole()),
+        'roleLabel' => ucfirst($user->getUserRole()->value),
         'roleValue' => $user->getUserRole()->value,
         'dateJoined' => $user->getDateJoined(),
         'lastLogin' => $user->getLastLogin(),
@@ -217,6 +203,12 @@ $canEditSelectedUserRole = $canDeleteSelectedUser;
                 </a>
             </div>
         </div>
+
+        <?php if (!empty($error_msg)): ?>
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)]" role="alert">
+                <span class="block sm:inline font-bold"><?php echo htmlspecialchars($error_msg); ?></span>
+            </div>
+        <?php endif; ?>
 
         <?php if ($activeTab === 'games'): ?>
             <div class="bg-[#F0EEE9] bg-opacity-80 rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-6 space-y-5 flex-1 min-h-0 flex flex-col overflow-hidden">
@@ -356,7 +348,7 @@ $canEditSelectedUserRole = $canDeleteSelectedUser;
                                         <?php foreach (UserRole::cases() as $role): ?>
                                             <option value="<?php echo htmlspecialchars($role->value); ?>"
                                                 <?php echo $selectedUser['roleValue'] === $role->value ? 'selected' : ''; ?>>
-                                                <?php echo htmlspecialchars(formatUserRoleLabel($role)); ?>
+                                                <?php echo htmlspecialchars(ucfirst($role->value)); ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
