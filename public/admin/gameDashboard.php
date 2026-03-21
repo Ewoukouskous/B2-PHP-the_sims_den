@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 if (session_status() === PHP_SESSION_NONE) {session_start();}
 
@@ -27,8 +27,12 @@ $gameTypes = GameType::cases();
 $pegiAges = PegiAge::cases();
 // All PegiDescriptor
 $pegiDescriptors = (new PegiDescriptorRepository())->findAll();
-// Error msg
+// Error and success msg
 $error_msg = "";
+$success_msg = "";
+if (isset($_GET['success']) && $_GET['success'] == 1) {
+    $success_msg = "Le jeu a bien été ajouté avec succès !";
+}
 
 
 // Check if it's a POST request that contain a 'action' field that contains 'addGame'
@@ -72,17 +76,17 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['
         $error_msg = "Veuillez remplir correctement les champs obligatoires (Titre, Description, Prix)";
         // check if the gameType enum value was valid
     } elseif ($gameType === null) {
-        $error_msg = "Le type de jeu selectionné est invalide";
+        $error_msg = "Le type de jeu selectionn├® est invalide";
         // check if the pegiAge enum value was valid
     } elseif ($pegiAge === null) {
-        $error_msg = "La restriction PEGI selectionnée est invalide";
+        $error_msg = "La restriction PEGI selectionn├®e est invalide";
         // check if the obligatory images are uploaded and if the upload is successfully
     } elseif (!isset($_FILES['gameTitlePic']) || $_FILES['gameTitlePic']['error'] !== UPLOAD_ERR_OK ||
         !isset($_FILES['gameHeroPic']) || $_FILES['gameHeroPic']['error'] !== UPLOAD_ERR_OK) {
-        $error_msg = "Les images de titre et de hero sont obligatoires et doivent être valides";
+        $error_msg = "Les images de titre et de hero sont obligatoires et doivent ├¬tre valides";
         // check if the game is not already in DB
     } elseif ($gameRepo->findByName($gameTitle) !== null) {
-        $error_msg = "Un jeu avec le même titre existe déjà";
+        $error_msg = "Un jeu avec le m├¬me titre existe d├®j├á";
     }
 
     if (empty($error_msg)) {
@@ -99,10 +103,10 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['
 
         // Check the size of gameTitlePic and gameHeroPic
         if ($_FILES['gameTitlePic']['size'] > $maxSizePerFile || $_FILES['gameHeroPic']['size'] > $maxSizePerFile) {
-            $error_msg = "L'image de titre ou hero dépasse la limite de 10MB";
+            $error_msg = "L'image de titre ou hero d├®passe la limite de 10MB";
             // Check if the images has an authorized extension
         } elseif (!in_array($titlePicExtension, $authorizedExtensions) || !in_array($heroPicExtension, $authorizedExtensions)) {
-            $error_msg = "Erreur, seul les fichiers avec les extensions (.png, .jpg, .webp) sont authorisés";
+            $error_msg = "Erreur, seul les fichiers avec les extensions (.png, .jpg, .webp) sont authoris├®s";
         }
 
 
@@ -164,23 +168,23 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['
                     if (isset($_FILES['gamePictures']) && !empty($_FILES['gamePictures']['name'][0])) {
                         // We make sure that the user doesn't sent more that 6 pictures
                         $fileCount = count($_FILES['gamePictures']['name']);
-                        if ($fileCount > 6 ) {throw new Exception("Erreur lors de l'upload des images additionnelles. Veuillez réessayer.");}
+                        if ($fileCount > 6 ) {throw new Exception("Erreur lors de l'upload des images additionnelles. Veuillez r├®essayer.");}
 
                         // Now we check the size of each file
                         foreach($_FILES['gamePictures']['size'] as $index => $size) {
                             // Check if the upload as failed (file to big for the PHP config)
                             if ($_FILES['gamePictures']['error'][$index] === UPLOAD_ERR_INI_SIZE) {
-                                throw new Exception("Le fichier " . ($index + 1) . " dépasse la limite autorisée par PHP (10MB)");
+                                throw new Exception("Le fichier " . ($index + 1) . " d├®passe la limite autoris├®e par PHP (10MB)");
                             }
                             // Check individual file size (in case the $maxSizePerFile change in the future and the PHP limit is higher than that)
                             if ($size > $maxSizePerFile) {
-                                throw new Exception("Le fichier " . ($index + 1) . " dépasse 10MB");
+                                throw new Exception("Le fichier " . ($index + 1) . " d├®passe 10MB");
                             }
                             $totalSize += $size;
                         }
                         // Check total size (titlePic + heroPic + gamePictures)
                         if ($totalSize > $maxTotalSize) {
-                            throw new Exception("La taille totale des fichiers dépasse 50MB");
+                            throw new Exception("La taille totale des fichiers d├®passe 50MB");
                         }
 
 
@@ -211,7 +215,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['
                     }
                     // And if every insert done is successfull (no error) we validate the transaction and redirect
                     $pdo->commit();
-                    header('Location: /admin/gameDashboard.php');
+                    header('Location: /admin/gameDashboard.php?success=1');
                     exit();
                 }
                 catch (Exception $exception) {
@@ -227,7 +231,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['
                     }
                 }
             } else {
-                $error_msg = "Erreur lors du téléchargement des images";
+                $error_msg = "Erreur lors du t├®l├®chargement des images";
             }
         }
     }
@@ -256,7 +260,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['
     include '../includes/header.php';
     ?>
 
-    <div class="absolute top-28 w-full max-w-7xl px-4 pb-4">
+    <div class="absolute inset-x-0 mx-auto top-28 w-full max-w-6xl px-4 pb-4">
 
         <div class="bg-[#F0EEE9] bg-opacity-95 rounded-[3rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] overflow-hidden">
 
