@@ -10,9 +10,11 @@ require_once $root_path . '/src/Model/Game.php';
 require_once $root_path . '/src/Model/GamePegiDescriptor.php';
 require_once $root_path . '/src/Model/PegiDescriptor.php';
 require_once $root_path . '/src/Model/GameMedia.php';
+require_once $root_path . '/src/Model/UserFavorite.php';
 require_once $root_path . '/src/Repository/GameRepository.php';
 require_once $root_path . '/src/Repository/GamePegiDescriptorRepository.php';
 require_once $root_path . '/src/Repository/PegiDescriptorRepository.php';
+require_once $root_path . '/src/Repository/UserFavoriteRepository.php';
 require_once $root_path . '/src/Repository/GameMediaRepository.php';
 require_once $root_path . '/src/Enum/GameType.php';
 require_once $root_path . '/src/Enum/PegiAge.php';
@@ -152,16 +154,38 @@ $pegiAgeImage = 'age-' . $pegiAgeValue . '.jpg';
                                 </div>
 
                                 <div class="flex flex-col items-center">
-                                    <button
-                                        class="bg-white p-3 rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] hover:scale-110 transition-transform">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-500"
-                                            fill="currentColor" viewBox="0 0 24 24">
-                                            <path
-                                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                        </svg>
-                                    </button>
-                                    <span
-                                        class="text-sm font-bold text-[#3769a9] mt-1"><?php echo $game->getFavoritesNumber(); ?></span>
+                                    <?php if ($isConnected): ?>
+                                        <form id="favorite-form" method="post" action="../actions/favorite.php" class="hidden">
+                                            <input type="hidden" name="action" value="<?php echo $isFavorite ? 'delete' : 'add'; ?>">
+                                            <input type="hidden" name="gameId" value="<?php echo $gameId; ?>">
+                                            <?php if (!$isFavorite): ?>
+                                                <input type="hidden" name="playtimeHours" value="0">
+                                            <?php endif; ?>
+                                        </form>
+                                        <button type="button"
+                                                onclick="document.getElementById('favorite-form').submit();"
+                                                class="bg-white p-3 rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] hover:scale-110 transition-transform"
+                                                aria-label="<?php echo $isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'; ?>">
+                                            <?php if ($isFavorite): ?>
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                                                    <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                                </svg>
+                                            <?php else: ?>
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-[#3769a9]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                                </svg>
+                                            <?php endif; ?>
+                                        </button>
+                                    <?php else: ?>
+                                        <a href="../auth/login.php"
+                                           class="bg-white p-3 rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] hover:scale-110 transition-transform"
+                                           aria-label="Se connecter pour ajouter aux favoris">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-[#3769a9]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                            </svg>
+                                        </a>
+                                    <?php endif; ?>
+                                    <span class="text-sm font-bold text-[#3769a9] mt-1"><?php echo $game->getFavoritesNumber(); ?></span>
                                 </div>
                             </div>
 
