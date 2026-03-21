@@ -475,7 +475,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['
                                        class="bg-white p-1 rounded-xl border-2 border-transparent shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] cursor-pointer transition duration-200 peer-checked/<?php echo htmlspecialchars($inputId); ?>:border-[#33b842] peer-checked/<?php echo htmlspecialchars($inputId); ?>:scale-105">
                                     <img src="../img/pegi/age/age-<?php echo htmlspecialchars($pegiAge->value); ?>.jpg"
                                          alt="PEGI <?php echo htmlspecialchars($pegiAge->value); ?>"
-                                         class="w-10 h-10 rounded object-cover"
+                                         class="w-10 h-10 rounded object-contain"
                                          onerror="this.onerror=null; this.style.display='none';">
                                 </label>
                             <?php endforeach; ?>
@@ -499,7 +499,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['
                                     <?php $imgName = strtolower(str_replace(' ', '-', $pegiDescriptor->getLabel())) . '.jpg'; ?>
                                     <img src="../img/pegi/desc/<?php echo htmlspecialchars($imgName); ?>"
                                          alt="<?php echo htmlspecialchars($pegiDescriptor->getLabel()); ?>"
-                                         class="w-7 h-7 rounded object-cover"
+                                         class="w-7 h-7 rounded object-contain"
                                          onerror="this.onerror=null; this.style.display='none';">
                                     <span class="text-[9px] text-center font-semibold text-[#3769a9] leading-tight"><?php echo htmlspecialchars($pegiDescriptor->getLabel()); ?></span>
                                 </label>
