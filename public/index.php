@@ -11,9 +11,12 @@ require_once $root_path . '/src/Model/Game.php';
 require_once $root_path . '/src/Repository/GameRepository.php';
 require_once $root_path . '/src/Enum/GameType.php';
 require_once $root_path . '/src/Enum/PegiAge.php';
+require_once $root_path . '/src/Enum/UserRole.php';
 
 // Déterminer si l'utilisateur est connecté
 $isConnected = AuthMiddleware::is_connected($_SESSION);
+$userRole = $_SESSION['userRole'] ?? null;
+$isAdmin = $userRole === UserRole::ADMIN->value;
 
 // Récupérer tous les jeux depuis la base de données
 $gameRepository = new GameRepository();
@@ -40,6 +43,7 @@ $games = $gameRepository->findAll();
         $basePath = '/';
         $showLoginButton = !$isConnected;
         $showProfilePic = $isConnected;
+        $showAdminButton = $isAdmin;
         $searchPlaceholder = 'Recherche :';
         include 'includes/header.php';
         ?>

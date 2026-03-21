@@ -3,13 +3,15 @@
 $basePath = $basePath ?? '/';
 $showLoginButton = !isset($showLoginButton) || $showLoginButton;
 $showProfilePic = $showProfilePic ?? false;
+require_once dirname(__DIR__, 2) . '/src/Security/AuthMiddleware.php';
+$showAdminButton = $showAdminButton ?? AuthMiddleware::is_admin($_SESSION);
 $searchPlaceholder = $searchPlaceholder ?? 'Recherche :';
 
 $username = $_SESSION['username'] ?? '';
 $profilePicPath = $_SESSION['profilePicPath'] ?? 'img/profilePics/green_plumbob.png';
 ?>
 
-<div id="navbar" class="relative w-full h-12 max-w-7xl p-4 bg-[#F0EEE9] bg-opacity-80 rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)]">
+<div id="navbar" class="relative w-full h-12 max-w-7xl p-4 mt-2 bg-[#F0EEE9] bg-opacity-80 rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)]">
 
     <div id="navbar-content" class="grid grid-cols-[repeat(7,1fr)] grid-rows-1 gap-2 h-full">
 
@@ -48,7 +50,7 @@ $profilePicPath = $_SESSION['profilePicPath'] ?? 'img/profilePics/green_plumbob.
                 <!-- Photo de profil de l'utilisateur connecté -->
                 <a href="#" title="<?php echo htmlspecialchars($username); ?>">
                     <img src="<?php echo $basePath . htmlspecialchars($profilePicPath); ?>"
-                         class="absolute w-16 h-16 object-cover transform -top-8 bg-[#2a5885] border-4 border-[#33b842] rounded-full hover:scale-110 transition-transform"
+                         class="absolute w-16 h-16 object-cover transform -top-6 bg-[#2a5885] border-4 border-[#33b842] rounded-full hover:scale-110 transition-transform"
                          alt="Photo de profil de <?php echo htmlspecialchars($username); ?>"
                          onerror="this.onerror=null; this.src='<?php echo $basePath; ?>img/profilePics/green_plumbob.png';">
                 </a>
@@ -56,7 +58,7 @@ $profilePicPath = $_SESSION['profilePicPath'] ?? 'img/profilePics/green_plumbob.
                 <!-- Logo plumbob par défaut -->
                 <a href="<?php echo $basePath; ?>index.php">
                     <img src="<?php echo  $basePath.$profilePicPath ?>"
-                         class="absolute w-16 h-16 object-cover transform -top-8 bg-[#2a5885] border-4 border-[#33b842] rounded-full hover:scale-110 transition-transform"
+                         class="absolute w-16 h-16 object-cover transform -top-6 bg-[#2a5885] border-4 border-[#33b842] rounded-full hover:scale-110 transition-transform"
                          alt="logo"
                          title="The Sims Den"
                          onerror="this.onerror=null; this.src='<?php echo $basePath; ?>img/profilePics/green_plumbob.png';">
@@ -66,6 +68,15 @@ $profilePicPath = $_SESSION['profilePicPath'] ?? 'img/profilePics/green_plumbob.
         </div>
 
         <div id="right" class="col-start-5 col-span-3 flex flex-row-reverse items-center gap-4">
+
+            <?php if ($showAdminButton): ?>
+                <a href="<?php echo $basePath; ?>admin/games.php">
+                    <button type="button"
+                            class="px-6 py-1 bg-[#33b842] text-white rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] font-medium outline-none hover:bg-[#2a9636] transition duration-200 ease-in-out">
+                        Admin
+                    </button>
+                </a>
+            <?php endif; ?>
 
             <?php if ($showLoginButton): ?>
                 <a href="<?php echo $basePath; ?>auth/login.php">

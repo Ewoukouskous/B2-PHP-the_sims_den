@@ -48,7 +48,9 @@ class PegiDescriptorRepository {
         // If $row isn't empty we return a PegiDescriptor object using "rowToPegiDescriptor()", else we return null
         return $row ? $this->rowToPegiDescriptor($row) : null;
     }
-    // READ [ALL] : Find all pegi_descriptor in the database
+    /** READ [ALL] : Find all PegiDescriptor from the database *
+    * @return PegiDescriptor[]
+    **/
     public function findAll() : array {
         // Because there is no named parameters (no custom parameters), we don't need to prepare the SQL string before
         $statement = $this->pdo->query("SELECT * FROM pegi_descriptor;");
