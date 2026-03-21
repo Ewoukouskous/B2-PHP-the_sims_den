@@ -64,7 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['
                 // so we can delete the game in the database (and the db will delete all GamePegiDescriptors and GameMedia associated
                 $gameRepo->delete($game->getId());
                 // Then redirect
-                header("Location: /admin/gameDashboard.php");
+                header("Location: /admin/games.php");
                 exit();
             } catch (Exception $exception) {
                 $error_msg = "Erreur lors de la suppression de '" . $game->getGameName() . "' :\"" . $exception->getMessage() . "\"";
