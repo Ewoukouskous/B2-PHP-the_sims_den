@@ -267,7 +267,7 @@ $canEditSelectedUserRole = $canDeleteSelectedUser;
                             <p class="text-2xl text-[#3769a9] font-bold">Aucun jeu cree pour le moment</p>
                         </div>
                     <?php else: ?>
-                        <div class="grid grid-cols-1 gap-4 h-full min-h-0 overflow-y-auto pr-2">
+                        <div class="flex flex-col gap-4 h-full min-h-0 overflow-y-auto pr-2">
                             <?php foreach ($games as $game): ?>
                                 <div class="bg-white rounded-2xl shadow-md p-4 flex items-center justify-between border-l-4 border-[#33b842] hover:shadow-lg transition-shadow duration-200">
                                     <div class="flex items-center gap-6 flex-1">

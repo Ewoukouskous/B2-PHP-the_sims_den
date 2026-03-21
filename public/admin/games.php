@@ -175,7 +175,7 @@ $games = $gameRepository->findAll();
                             </p>
                         </div>
                     <?php else: ?>
-                        <div class="grid grid-cols-1 gap-4 max-h-[60vh] overflow-y-auto pr-2">
+                        <div class="flex flex-col gap-4 overflow-y-auto pr-2">
                             <?php foreach ($games as $game): ?>
                                 <div
                                     class="bg-white rounded-2xl shadow-md p-6 flex items-center justify-between border-l-4 border-[#33b842] hover:shadow-lg transition-shadow duration-200">
