@@ -1,174 +1,137 @@
-(function () {
-    const form = document.querySelector('form[data-add-game-form]');
-    if (!form) {
-        return;
-    }
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // Preview logic for Hero and Title images
+    const setupSingleImagePreview = (inputId, placeholderId, previewContainerId, previewImageId, nameId) => {
+        const input = document.getElementById(inputId);
+        const placeholder = document.getElementById(placeholderId);
+        const previewContainer = document.getElementById(previewContainerId);
+        const previewImage = document.getElementById(previewImageId);
+        const nameText = document.getElementById(nameId);
+        
+        if (!input) return;
 
-    const maxPerFile = 10 * 1024 * 1024;
-    const maxTotal = 50 * 1024 * 1024;
-    const allowedExtensions = new Set(['png', 'jpg', 'jpeg', 'webp']);
-
-    const titlePicInput = form.querySelector('input[name="gameTitlePic"]');
-    const heroPicInput = form.querySelector('input[name="gameHeroPic"]');
-    const galleryInput = form.querySelector('input[name="gamePictures[]"]');
-
-    function isMeaningfulFile(file) {
-        return !!file && typeof file.name === 'string' && file.name.trim() !== '' && file.size > 0;
-    }
-
-    function extensionOf(fileName) {
-        const dotIndex = fileName.lastIndexOf('.');
-        if (dotIndex === -1) {
-            return '';
-        }
-        return fileName.slice(dotIndex + 1).toLowerCase();
-    }
-
-    function validateExtension(file, label, errors) {
-        const extension = extensionOf(file.name);
-        if (!allowedExtensions.has(extension)) {
-            errors.push(label + ' : format non autorise (' + file.name + ').');
-        }
-    }
-
-    function isValidSinglePhoto(file) {
-        return isMeaningfulFile(file)
-            && allowedExtensions.has(extensionOf(file.name))
-            && file.size <= maxPerFile;
-    }
-
-    function isValidGalleryPhoto(file) {
-        return isMeaningfulFile(file)
-            && allowedExtensions.has(extensionOf(file.name))
-            && file.size <= maxPerFile;
-    }
-
-    function getLabelTextNode(input) {
-        if (!input) {
-            return null;
-        }
-
-        const label = input.closest('label');
-        if (!label) {
-            return null;
-        }
-
-        return label.querySelector('span');
-    }
-
-    function setUploadVisualState(input, isValid, successText) {
-        if (!input) {
-            return;
-        }
-
-        const label = input.closest('label');
-        const textNode = getLabelTextNode(input);
-        if (!label || !textNode) {
-            return;
-        }
-
-        if (!textNode.dataset.baseText) {
-            textNode.dataset.baseText = textNode.textContent.trim();
-        }
-
-        if (isValid) {
-            label.style.borderColor = '#33b842';
-            textNode.textContent = textNode.dataset.baseText + ' - ' + successText;
-        } else {
-            label.style.borderColor = '#3769a9';
-            textNode.textContent = textNode.dataset.baseText;
-        }
-    }
-
-    function updateUploadStates() {
-        const titlePic = titlePicInput && titlePicInput.files ? titlePicInput.files[0] : null;
-        const heroPic = heroPicInput && heroPicInput.files ? heroPicInput.files[0] : null;
-        const galleryFilesRaw = galleryInput && galleryInput.files ? Array.from(galleryInput.files) : [];
-        const galleryFiles = galleryFilesRaw.filter(isMeaningfulFile);
-
-        setUploadVisualState(titlePicInput, isValidSinglePhoto(titlePic), 'importee');
-        setUploadVisualState(heroPicInput, isValidSinglePhoto(heroPic), 'importee');
-
-        let galleryOk = galleryFiles.length > 0 && galleryFiles.length <= 6;
-        galleryFiles.forEach(function (file) {
-            if (!isValidGalleryPhoto(file)) {
-                galleryOk = false;
+        input.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    nameText.textContent = file.name;
+                    placeholder.classList.add('hidden');
+                    previewContainer.classList.remove('hidden');
+                }
+                reader.readAsDataURL(file);
+            } else {
+                previewImage.src = '';
+                nameText.textContent = '';
+                placeholder.classList.remove('hidden');
+                previewContainer.classList.add('hidden');
             }
         });
+    };
 
-        const galleryText = galleryFiles.length > 0
-            ? galleryFiles.length + ' photo(s) importee(s)'
-            : 'importee';
-        setUploadVisualState(galleryInput, galleryOk, galleryText);
-    }
+    setupSingleImagePreview('gameHeroPic', 'heroPlaceholder', 'heroPreviewContainer', 'heroPreview', 'heroName');
+    setupSingleImagePreview('gameTitlePic', 'titlePlaceholder', 'titlePreviewContainer', 'titlePreview', 'titleName');
 
-    if (titlePicInput) {
-        titlePicInput.addEventListener('change', updateUploadStates);
-    }
-    if (heroPicInput) {
-        heroPicInput.addEventListener('change', updateUploadStates);
-    }
+    // Preview logic for multiple Gallery Images
+    const galleryInput = document.getElementById('gamePictures');
+    const galleryPlaceholder = document.getElementById('galleryPlaceholder');
+    const galleryPreviewContainer = document.getElementById('galleryPreviewContainer');
+    const galleryError = document.getElementById('galleryError');
+    let accumulatedFiles = [];
+
     if (galleryInput) {
-        galleryInput.addEventListener('change', updateUploadStates);
-    }
-
-    updateUploadStates();
-
-    form.addEventListener('submit', function (event) {
-        const errors = [];
-
-        const titlePic = titlePicInput && titlePicInput.files ? titlePicInput.files[0] : null;
-        const heroPic = heroPicInput && heroPicInput.files ? heroPicInput.files[0] : null;
-        const galleryFilesRaw = galleryInput && galleryInput.files ? Array.from(galleryInput.files) : [];
-
-        const galleryFiles = galleryFilesRaw.filter(isMeaningfulFile);
-
-        if (!isMeaningfulFile(titlePic)) {
-            errors.push('Photo secondaire obligatoire (gameTitlePic).');
-        }
-
-        if (!isMeaningfulFile(heroPic)) {
-            errors.push('Photo principale obligatoire (gameHeroPic).');
-        }
-
-        if (galleryFiles.length > 6) {
-            errors.push('gamePictures accepte au maximum 6 images.');
-        }
-
-        const filesToCheck = [];
-        if (isMeaningfulFile(titlePic)) {
-            filesToCheck.push({ file: titlePic, label: 'Photo secondaire' });
-        }
-        if (isMeaningfulFile(heroPic)) {
-            filesToCheck.push({ file: heroPic, label: 'Photo principale' });
-        }
-
-        galleryFiles.forEach(function (file, index) {
-            filesToCheck.push({ file: file, label: 'Image galerie #' + (index + 1) });
-        });
-
-        let totalSize = 0;
-        filesToCheck.forEach(function (entry) {
-            const file = entry.file;
-            const label = entry.label;
-
-            if (file.size > maxPerFile) {
-                errors.push(label + ' depasse 10MB.');
+        galleryInput.addEventListener('change', function(e) {
+            const newFiles = Array.from(e.target.files);
+            
+            // Accumulate new files while respecting the limit of 6
+            let filesToAdd = newFiles.slice(0, 6 - accumulatedFiles.length);
+            accumulatedFiles = accumulatedFiles.concat(filesToAdd);
+            
+            if (accumulatedFiles.length + (newFiles.length - filesToAdd.length) > 6) {
+                galleryError.textContent = `Erreur: Le maximum est de 6 images. Seules les premières ont été conservées.`;
+                galleryError.classList.remove('hidden');
+            } else {
+                galleryError.classList.add('hidden');
             }
 
-            validateExtension(file, label, errors);
-            totalSize += file.size;
+            // Sync the input state with accumulated files using DataTransfer
+            const dt = new DataTransfer();
+            accumulatedFiles.forEach(f => dt.items.add(f));
+            galleryInput.files = dt.files;
+
+            if (accumulatedFiles.length > 0) {
+                galleryPlaceholder.classList.add('hidden');
+                galleryPreviewContainer.classList.remove('hidden');
+                galleryPreviewContainer.innerHTML = ''; // Clear prev
+
+                accumulatedFiles.forEach((file, index) => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const div = document.createElement('div');
+                        div.className = "relative flex flex-col items-center flex-shrink-0 w-16 h-20 p-1 bg-[#F0EEE9] rounded shadow-sm group";
+                        div.innerHTML = `
+                            <button type="button" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition shadow" data-remove-idx="${index}">✕</button>
+                            <img src="${e.target.result}" class="w-full h-12 object-contain rounded" alt="galerie">
+                            <span class="text-[8px] text-[#3769a9] truncate w-full mt-1 text-center font-semibold" title="${file.name}">${file.name}</span>
+                        `;
+                        // Remove image event listener
+                        div.querySelector('button').addEventListener('click', (ev) => {
+                            ev.preventDefault();
+                            accumulatedFiles.splice(index, 1);
+                            // Trigger a synthetic change event to re-render
+                            const dtRemove = new DataTransfer();
+                            accumulatedFiles.forEach(f => dtRemove.items.add(f));
+                            galleryInput.files = dtRemove.files;
+                            galleryInput.dispatchEvent(new Event('change'));
+                        });
+                        galleryPreviewContainer.appendChild(div);
+                    }
+                    reader.readAsDataURL(file);
+                });
+            } else {
+                galleryPlaceholder.classList.remove('hidden');
+                galleryPreviewContainer.classList.add('hidden');
+                galleryPreviewContainer.innerHTML = '';
+            }
         });
+    }
 
-        if (totalSize > maxTotal) {
-            errors.push('La taille totale des fichiers depasse 50MB.');
-        }
+    // Basic Validation before submit
+    const form = document.getElementById('addGameForm');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const priceInput = document.getElementById('gamePrice').value;
+            const heroInput = document.getElementById('gameHeroPic').files.length;
+            const titleInput = document.getElementById('gameTitlePic').files.length;
 
-        updateUploadStates();
+            if (parseFloat(priceInput) < 0) {
+                alert("Le prix ne peut pas être négatif.");
+                e.preventDefault();
+                return;
+            }
 
-        if (errors.length > 0) {
-            event.preventDefault();
-            alert(errors.join('\n'));
-        }
-    });
-})();
+            if (heroInput === 0 || titleInput === 0) {
+                alert("Les images principales et secondaires sont obligatoires.");
+                e.preventDefault();
+                return;
+            }
+
+            // Could add GameType and PegiAge radio checking if required HTML5 fails
+            const pegiAgeChecked = document.querySelector('input[name="gamePegiAge"]:checked');
+            const gameTypeChecked = document.querySelector('input[name="gameType"]:checked');
+
+            if (!pegiAgeChecked) {
+                alert("Veuillez sélectionner un âge PEGI.");
+                e.preventDefault();
+                return;
+            }
+
+            if (!gameTypeChecked) {
+                alert("Veuillez sélectionner un type de jeu.");
+                e.preventDefault();
+                return;
+            }
+        });
+    }
+});
