@@ -393,7 +393,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['
                                            <?php echo (($_POST['gameType'] ?? '') === $typeValue) ? 'checked' : ''; ?>>
                                     <label for="<?php echo htmlspecialchars($inputId); ?>"
                                            class="px-4 py-1 bg-[#F0EEE9] rounded-4xl text-[#33b842] text-sm font-bold border-2 border-[#3769a9] cursor-pointer transition duration-200 peer-checked/<?php echo htmlspecialchars($inputId); ?>:bg-[#33b842] peer-checked/<?php echo htmlspecialchars($inputId); ?>:text-white peer-checked/<?php echo htmlspecialchars($inputId); ?>:border-[#33b842]">
-                                        <?php echo htmlspecialchars($typeValue); ?>
+                                        <?php echo htmlspecialchars(ucfirst(strtolower($gameType->name))); ?>
                                     </label>
                                 <?php endforeach; ?>
                             </div>
