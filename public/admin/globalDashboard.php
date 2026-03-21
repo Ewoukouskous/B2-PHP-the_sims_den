@@ -244,12 +244,8 @@ $canEditSelectedUserRole = $canDeleteSelectedUser;
                                             <h2 class="text-xl font-bold text-[#3769a9]"><?php echo htmlspecialchars($game->getGameName()); ?></h2>
                                             <p class="text-sm text-gray-600 line-clamp-1"><?php echo htmlspecialchars($game->getGameDesc()); ?></p>
                                             <div class="flex gap-3 mt-2">
-                                                <span class="text-xs bg-[#33b842] text-white px-3 py-1 rounded-full font-medium">
-                                                    <?php echo match($game->getGameType()) {
-                                                        GameType::PC => 'PC',
-                                                        GameType::CONSOLE => 'Console',
-                                                        GameType::SMARTPHONE => 'Smartphone'
-                                                    }; ?>
+                                                <span class="text-xs bg-[#33b842] text-white px-3 py-1 rounded-full font-medium capitalize">
+                                                    <?php echo htmlspecialchars($game->getGameType()->value); ?>
                                                 </span>
                                                 <span class="text-xs bg-[#3769a9] text-white px-3 py-1 rounded-full font-medium">
                                                     PEGI <?php echo htmlspecialchars($game->getPegiAge()->value); ?>

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 if (session_status() === PHP_SESSION_NONE) {session_start();}
 
@@ -27,8 +27,12 @@ $gameTypes = GameType::cases();
 $pegiAges = PegiAge::cases();
 // All PegiDescriptor
 $pegiDescriptors = (new PegiDescriptorRepository())->findAll();
-// Error msg
+// Error and success msg
 $error_msg = "";
+$success_msg = "";
+if (isset($_GET['success']) && $_GET['success'] == 1) {
+    $success_msg = "Le jeu a bien été ajouté avec succès !";
+}
 
 
 // Check if it's a POST request that contain a 'action' field that contains 'addGame'
@@ -211,7 +215,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['
                     }
                     // And if every insert done is successfull (no error) we validate the transaction and redirect
                     $pdo->commit();
-                    header('Location: /admin/gameDashboard.php');
+                    header('Location: /admin/gameDashboard.php?success=1');
                     exit();
                 }
                 catch (Exception $exception) {
@@ -309,7 +313,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['
     include '../includes/header.php';
     ?>
 
-    <div class="absolute top-28 w-full max-w-7xl px-4 pb-4">
+    <div class="absolute inset-x-0 mx-auto top-28 w-full max-w-6xl px-4 pb-4">
 
         <div class="bg-[#F0EEE9] bg-opacity-95 rounded-[3rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] overflow-hidden">
 
