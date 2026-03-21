@@ -20,7 +20,7 @@ if (!AuthMiddleware::is_admin($_SESSION)) {
 }
 
 // Handle game deletion
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'deleteGame') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string) ($_POST['action'] ?? '') === 'deleteGame') {
 
     // DEPENDENCIES TO REMOVE A GAME
     require_once $root_path . '/src/Model/Game.php';
@@ -30,8 +30,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
 
     if (isset($_POST['gameId'])) {
         $gameRepo = new GameRepository();
-        // Check if the sent game exist
-        $game = $gameRepo->findById((int)$_POST['gameId']);
+        $gameId = (int) $gameIdString;
+        $game = $gameRepo->findById($gameId);
 
         if ($game !== null) {
             try {
@@ -39,15 +39,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
                 $titlePicPath = $root_path . '/public' . $game->getImageTitlePath();
                 $heroPicPath = $root_path . '/public' . $game->getImageHeroPath();
                 // Check if the two pics exists, if yes delete them
-                if (file_exists($titlePicPath)) {unlink($titlePicPath);}
-                if (file_exists($heroPicPath)) {unlink($heroPicPath);}
+                if (file_exists($titlePicPath)) {
+                    unlink($titlePicPath);
+                }
+                if (file_exists($heroPicPath)) {
+                    unlink($heroPicPath);
+                }
 
                 // Now get all the gameMedia linked to the game to get their path after
                 $gameMedias = (new GameMediaRepository())->findByGameId($game->getId());
 
                 // Check if the game has gameMedias
                 if (!empty($gameMedias)) {
-                    foreach($gameMedias as $media) {
+                    foreach ($gameMedias as $media) {
                         $mediaPath = $root_path . '/public' . $media->getFilePath();
                         // If the file exist we delete it, else we do nothing
                         if (file_exists($mediaPath)) {
@@ -61,12 +65,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
                 // Then redirect
                 header("Location: games.php");
                 exit();
+            } catch (Exception $e) {
+                // Log the error or handle it appropriately
+                error_log('Error deleting game: ' . $e->getMessage());
             }
-            catch (Exception $exception) {
-                $error_msg = "Erreur lors de la suppression de '" . $game->getGameName() . "' :\"" .$exception->getMessage() . "\"";
-            }
-        } else {
-            $error_msg = "Erreur, le jeu que vous souhaité supprimer n'existe pas dans la base de données";
         }
     }
 }
@@ -79,14 +81,20 @@ $games = $gameRepository->findAll();
 
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <title>Admin - Gestion des Jeux - The Sims Den</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <style>
         @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         @keyframes slideUp {
@@ -94,19 +102,31 @@ $games = $gameRepository->findAll();
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
             }
         }
 
-        .animate-fadeIn { animation: fadeIn 0.3s ease-in-out; }
-        .animate-slideUp { animation: slideUp 0.3s ease-in-out; }
+        .animate-fadeIn {
+            animation: fadeIn 0.3s ease-in-out;
+        }
 
-        #deleteModal:not(.hidden) { animation: fadeIn 0.3s ease-in-out; }
-        #deleteModal:not(.hidden) > div { animation: slideUp 0.3s ease-in-out; }
+        .animate-slideUp {
+            animation: slideUp 0.3s ease-in-out;
+        }
+
+        #deleteModal:not(.hidden) {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        #deleteModal:not(.hidden)>div {
+            animation: slideUp 0.3s ease-in-out;
+        }
     </style>
 </head>
+
 <body>
     <div id="background" class="fixed top-0 left-0 w-full h-full bg-cover bg-center bg-[#3769a9]">
         <img src="../img/bg.png" alt="Background Image" class="w-full h-full object-cover">
@@ -126,7 +146,8 @@ $games = $gameRepository->findAll();
 
         <div class="absolute top-28 w-full max-w-7xl px-4 pb-12">
 
-            <div class="bg-[#F0EEE9] bg-opacity-80 rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-6 space-y-6">
+            <div
+                class="bg-[#F0EEE9] bg-opacity-80 rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-8 space-y-8">
 
                 <!--            HEADER Section-->
                 <div class="flex items-center justify-between gap-6">
@@ -138,17 +159,11 @@ $games = $gameRepository->findAll();
 
                     <a href="gameDashboard.php">
                         <button type="button"
-                                class="px-8 py-3 bg-[#33b842] text-white font-bold rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(0,0,0,0.1)] border border-white/20 hover:bg-[#2a9636] transition duration-200 ease-in-out">
+                            class="px-8 py-3 bg-[#33b842] text-white font-bold rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(0,0,0,0.1)] border border-white/20 hover:bg-[#2a9636] transition duration-200 ease-in-out">
                             + Créer un jeu
                         </button>
                     </a>
                 </div>
-
-                <?php if (!empty($error_msg)): ?>
-                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)]" role="alert">
-                        <span class="block sm:inline font-bold"><?php echo htmlspecialchars($error_msg); ?></span>
-                    </div>
-                <?php endif; ?>
 
                 <!--            GAMES LIST Section-->
                 <div class="space-y-4">
@@ -161,20 +176,22 @@ $games = $gameRepository->findAll();
                     <?php else: ?>
                         <div class="grid grid-cols-1 gap-4 max-h-[60vh] overflow-y-auto pr-2">
                             <?php foreach ($games as $game): ?>
-                                <div class="bg-white rounded-2xl shadow-md p-4 flex items-center justify-between border-l-4 border-[#33b842] hover:shadow-lg transition-shadow duration-200">
+                                <div
+                                    class="bg-white rounded-2xl shadow-md p-6 flex items-center justify-between border-l-4 border-[#33b842] hover:shadow-lg transition-shadow duration-200">
 
                                     <!--                        GAME INFO -->
                                     <div class="flex items-center gap-6 flex-1">
                                         <div class="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg">
                                             <img src="../<?php echo htmlspecialchars($game->getImageTitlePath()); ?>"
-                                                 alt="<?php echo htmlspecialchars($game->getGameName()); ?>"
-                                                 class="w-full h-full object-cover"
-                                                 onerror="this.onerror=null; this.src='../img/plumbob.webp';">
+                                                alt="<?php echo htmlspecialchars($game->getGameName()); ?>"
+                                                class="w-full h-full object-cover"
+                                                onerror="this.onerror=null; this.src='../img/plumbob.webp';">
                                         </div>
 
                                         <div class="flex-1">
                                             <h2 class="text-xl font-bold text-[#3769a9]">
-                                                <a href="../views/game.php?id=<?php echo $game->getId(); ?>" class="hover:underline hover:text-blue-700 transition-colors">
+                                                <a href="../views/game.php?id=<?php echo $game->getId(); ?>"
+                                                    class="hover:underline hover:text-blue-700 transition-colors">
                                                     <?php echo htmlspecialchars($game->getGameName()); ?>
                                                 </a>
                                             </h2>
@@ -182,10 +199,16 @@ $games = $gameRepository->findAll();
                                                 <?php echo htmlspecialchars($game->getGameDesc()); ?>
                                             </p>
                                             <div class="flex gap-3 mt-2">
-                                                <span class="text-xs bg-[#33b842] text-white px-3 py-1 rounded-full font-medium capitalize">
-                                                    <?php echo htmlspecialchars($game->getGameType()->value); ?>
+                                                <span
+                                                    class="text-xs bg-[#33b842] text-white px-3 py-1 rounded-full font-medium">
+                                                    <?php echo match ($game->getGameType()) {
+                                                        GameType::PC => 'PC',
+                                                        GameType::CONSOLE => 'Console',
+                                                        GameType::SMARTPHONE => 'Smartphone'
+                                                    }; ?>
                                                 </span>
-                                                <span class="text-xs bg-[#3769a9] text-white px-3 py-1 rounded-full font-medium">
+                                                <span
+                                                    class="text-xs bg-[#3769a9] text-white px-3 py-1 rounded-full font-medium">
                                                     PEGI <?php echo htmlspecialchars($game->getPegiAge()->value); ?>
                                                 </span>
                                             </div>
@@ -201,9 +224,9 @@ $games = $gameRepository->findAll();
                                         </div>
 
                                         <button type="button"
-                                                class="admin-delete-btn px-6 py-2 bg-red-500 text-white font-bold rounded-lg shadow-md hover:bg-red-600 transition duration-200 ease-in-out"
-                                                data-game-id="<?php echo $game->getId(); ?>"
-                                                data-game-name="<?php echo htmlspecialchars($game->getGameName()); ?>">
+                                            class="admin-delete-btn px-6 py-2 bg-red-500 text-white font-bold rounded-lg shadow-md hover:bg-red-600 transition duration-200 ease-in-out"
+                                            data-game-id="<?php echo $game->getId(); ?>"
+                                            data-game-name="<?php echo htmlspecialchars($game->getGameName()); ?>">
                                             Supprimer
                                         </button>
                                     </div>
@@ -221,10 +244,10 @@ $games = $gameRepository->findAll();
     </div>
 
     <!--        DELETE MODAL (Sims Style - Exit Game)-->
-    <div id="deleteModal"
-         class="hidden fixed inset-0 flex items-center justify-center z-50 p-4 animate-fadeIn"
-         style="background-color: rgba(10, 20, 35, 0.16); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);">
-        <div class="bg-white bg-opacity-98 rounded-lg shadow-2xl p-8 max-w-sm w-full border-4 border-gray-300 animate-slideUp" style="box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);">
+    <div id="deleteModal" class="hidden fixed inset-0 flex items-center justify-center z-50 p-4 animate-fadeIn"
+        style="background-color: rgba(10, 20, 35, 0.16); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);">
+        <div class="bg-white bg-opacity-98 rounded-lg shadow-2xl p-8 max-w-sm w-full border-4 border-gray-300 animate-slideUp"
+            style="box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);">
 
             <div class="text-center space-y-6">
 
@@ -246,17 +269,15 @@ $games = $gameRepository->findAll();
                 <!-- BUTTONS (X and Ô£ô) -->
                 <div class="flex items-center justify-end gap-6 pt-6">
                     <!-- Cancel Button (X) -->
-                    <button type="button"
-                            id="cancelBtn"
-                            class="w-16 h-16 flex items-center justify-center rounded-full bg-white border-4 border-blue-500 text-blue-500 font-bold text-3xl shadow-lg hover:bg-blue-100 transition duration-200 ease-in-out hover:scale-110">
-                        Ô£ò
+                    <button type="button" id="cancelBtn"
+                        class="w-16 h-16 flex items-center justify-center rounded-full bg-white border-4 border-blue-500 text-blue-500 font-bold text-3xl shadow-lg hover:bg-blue-100 transition duration-200 ease-in-out hover:scale-110">
+                        ✕
                     </button>
 
-                    <!-- Confirm Button (Ô£ô) -->
-                    <button type="button"
-                            id="confirmDeleteBtn"
-                            class="w-16 h-16 flex items-center justify-center rounded-full bg-white border-4 border-green-500 text-green-500 font-bold text-3xl shadow-lg hover:bg-green-100 transition duration-200 ease-in-out hover:scale-110">
-                        Ô£ô
+                    <!-- Confirm Button (✓) -->
+                    <button type="button" id="confirmDeleteBtn"
+                        class="w-16 h-16 flex items-center justify-center rounded-full bg-white border-4 border-green-500 text-green-500 font-bold text-3xl shadow-lg hover:bg-green-100 transition duration-200 ease-in-out hover:scale-110">
+                        ✓
                     </button>
                 </div>
 
@@ -268,4 +289,5 @@ $games = $gameRepository->findAll();
     <script src="../js/adminGames.js"></script>
 
 </body>
+
 </html>
