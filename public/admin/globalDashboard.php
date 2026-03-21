@@ -42,13 +42,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
     require_once $root_path . '/src/Repository/GameRepository.php';
     require_once $root_path . '/src/Repository/GameMediaRepository.php';
 
-    $gameIdRaw = $_POST['gameId'] ?? '';
-    $gameIdString = trim((string)$gameIdRaw);
-
-    if ($gameIdString !== '' && ctype_digit($gameIdString)) {
+    if (isset($_POST['gameId'])) {
         $gameRepo = new GameRepository();
-        $gameId = (int)$gameIdString;
-        $game = $gameRepo->findById($gameId);
+        // Check if the sent game exist
+        $game = $gameRepo->findById((int)$_POST['gameId']);
 
         if ($game !== null) {
             try {
@@ -60,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
                 if (file_exists($heroPicPath)) {unlink($heroPicPath);}
 
                 // Now get all the gameMedia linked to the game to get their path after
-                $gameMedias = (new GameMediaRepository())->findByGameId($gameId);
+                $gameMedias = (new GameMediaRepository())->findByGameId($game->getId());
 
                 // Check if the game has gameMedias
                 if (!empty($gameMedias)) {
@@ -72,17 +69,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
                         }
                     }
                 }
-                // Now delete the game in the database
-                $gameRepo->delete($gameId);
-            } catch (Exception $exception) {
+                // Now if we go there it's means that everything before goes good (all files has been deleted)
+                // so we can delete the game in the database (and the db will delete all GamePegiDescriptors and GameMedia associated
+                $gameRepo->delete($game->getId());
+                // Then redirect
+                header("Location: globalDashboard.php?tab=games");
+                exit();
+            }
+            catch (Exception $exception) {
                 $error_msg = "Erreur lors de la suppression de '" . $game->getGameName() . "' :\"" .$exception->getMessage() . "\"";
             }
+        } else {
+            $error_msg = "Erreur, le jeu que vous souhaité supprimer n'existe pas dans la base de données";
         }
-    }
-
-    if (empty($error_msg)) {
-        header('Location: globalDashboard.php?tab=games');
-        exit();
     }
 }
 
@@ -270,7 +269,7 @@ $canEditSelectedUserRole = $canDeleteSelectedUser;
                     <?php else: ?>
                         <div class="grid grid-cols-1 gap-4 h-full min-h-0 overflow-y-auto pr-2">
                             <?php foreach ($games as $game): ?>
-                                <div class="bg-white rounded-2xl shadow-md p-6 flex items-center justify-between border-l-4 border-[#33b842] hover:shadow-lg transition-shadow duration-200">
+                                <div class="bg-white rounded-2xl shadow-md p-4 flex items-center justify-between border-l-4 border-[#33b842] hover:shadow-lg transition-shadow duration-200">
                                     <div class="flex items-center gap-6 flex-1">
                                         <div class="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg">
                                             <img src="../<?php echo htmlspecialchars($game->getImageTitlePath()); ?>"

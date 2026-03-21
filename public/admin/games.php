@@ -28,13 +28,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
     require_once $root_path . '/src/Repository/GameRepository.php';
     require_once $root_path . '/src/Repository/GameMediaRepository.php';
 
-    $gameIdRaw = $_POST['gameId'] ?? '';
-    $gameIdString = trim((string)$gameIdRaw);
-
-    if ($gameIdString !== '' && ctype_digit($gameIdString)) {
+    if (isset($_POST['gameId'])) {
         $gameRepo = new GameRepository();
-        $gameId = (int)$gameIdString;
-        $game = $gameRepo->findById($gameId);
+        // Check if the sent game exist
+        $game = $gameRepo->findById((int)$_POST['gameId']);
 
         if ($game !== null) {
             try {
@@ -46,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
                 if (file_exists($heroPicPath)) {unlink($heroPicPath);}
 
                 // Now get all the gameMedia linked to the game to get their path after
-                $gameMedias = (new GameMediaRepository())->findByGameId($gameId);
+                $gameMedias = (new GameMediaRepository())->findByGameId($game->getId());
 
                 // Check if the game has gameMedias
                 if (!empty($gameMedias)) {
@@ -58,20 +55,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
                         }
                     }
                 }
-                // Now delete the game in the database
-                $gameRepo->delete($gameId);
-                // Redirect to refresh the page after successful deletion
-                header('Location: games.php');
+                // Now if we go there it's means that everything before goes good (all files has been deleted)
+                // so we can delete the game in the database (and the db will delete all GamePegiDescriptors and GameMedia associated
+                $gameRepo->delete($game->getId());
+                // Then redirect
+                header("Location: games.php");
                 exit();
-            } catch (Exception $e) {
-                // Log the error or handle it appropriately
-                error_log('Error deleting game: ' . $e->getMessage());
             }
+            catch (Exception $exception) {
+                $error_msg = "Erreur lors de la suppression de '" . $game->getGameName() . "' :\"" .$exception->getMessage() . "\"";
+            }
+        } else {
+            $error_msg = "Erreur, le jeu que vous souhaité supprimer n'existe pas dans la base de données";
         }
     }
 }
 
-// R├®cup├®rer tous les jeux depuis la base de donn├®es
+$error_msg = "";
+// Récupérer tous les jeux depuis la base de données
 $gameRepository = new GameRepository();
 $games = $gameRepository->findAll();
 ?>
@@ -125,7 +126,7 @@ $games = $gameRepository->findAll();
 
         <div class="absolute top-28 w-full max-w-7xl px-4 pb-12">
 
-            <div class="bg-[#F0EEE9] bg-opacity-80 rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-8 space-y-8">
+            <div class="bg-[#F0EEE9] bg-opacity-80 rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-6 space-y-6">
 
                 <!--            HEADER Section-->
                 <div class="flex items-center justify-between gap-6">
@@ -143,6 +144,12 @@ $games = $gameRepository->findAll();
                     </a>
                 </div>
 
+                <?php if (!empty($error_msg)): ?>
+                    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)]" role="alert">
+                        <span class="block sm:inline font-bold"><?php echo htmlspecialchars($error_msg); ?></span>
+                    </div>
+                <?php endif; ?>
+
                 <!--            GAMES LIST Section-->
                 <div class="space-y-4">
                     <?php if (empty($games)): ?>
@@ -154,7 +161,7 @@ $games = $gameRepository->findAll();
                     <?php else: ?>
                         <div class="grid grid-cols-1 gap-4 max-h-[60vh] overflow-y-auto pr-2">
                             <?php foreach ($games as $game): ?>
-                                <div class="bg-white rounded-2xl shadow-md p-6 flex items-center justify-between border-l-4 border-[#33b842] hover:shadow-lg transition-shadow duration-200">
+                                <div class="bg-white rounded-2xl shadow-md p-4 flex items-center justify-between border-l-4 border-[#33b842] hover:shadow-lg transition-shadow duration-200">
 
                                     <!--                        GAME INFO -->
                                     <div class="flex items-center gap-6 flex-1">
