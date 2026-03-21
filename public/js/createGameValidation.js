@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    
+
     // Preview logic for Hero and Title images
     const setupSingleImagePreview = (inputId, placeholderId, previewContainerId, previewImageId, nameId) => {
         const input = document.getElementById(inputId);
@@ -7,14 +7,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const previewContainer = document.getElementById(previewContainerId);
         const previewImage = document.getElementById(previewImageId);
         const nameText = document.getElementById(nameId);
-        
+
         if (!input) return;
 
-        input.addEventListener('change', function(e) {
+        input.addEventListener('change', function (e) {
             const file = e.target.files[0];
             if (file) {
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     previewImage.src = e.target.result;
                     nameText.textContent = file.name;
                     placeholder.classList.add('hidden');
@@ -41,20 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let accumulatedFiles = [];
 
     if (galleryInput) {
-        galleryInput.addEventListener('change', function(e) {
-            const newFiles = Array.from(e.target.files);
-            
-            // Accumulate new files while respecting the limit of 6
-            let filesToAdd = newFiles.slice(0, 6 - accumulatedFiles.length);
-            accumulatedFiles = accumulatedFiles.concat(filesToAdd);
-            
-            if (accumulatedFiles.length + (newFiles.length - filesToAdd.length) > 6) {
-                galleryError.textContent = `Erreur: Le maximum est de 6 images. Seules les premières ont été conservées.`;
-                galleryError.classList.remove('hidden');
-            } else {
-                galleryError.classList.add('hidden');
-            }
-
+        function renderGallery() {
             // Sync the input state with accumulated files using DataTransfer
             const dt = new DataTransfer();
             accumulatedFiles.forEach(f => dt.items.add(f));
@@ -63,11 +50,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (accumulatedFiles.length > 0) {
                 galleryPlaceholder.classList.add('hidden');
                 galleryPreviewContainer.classList.remove('hidden');
-                galleryPreviewContainer.innerHTML = ''; // Clear prev
+                galleryPreviewContainer.innerHTML = '';
 
                 accumulatedFiles.forEach((file, index) => {
                     const reader = new FileReader();
-                    reader.onload = function(e) {
+                    reader.onload = function (e) {
                         const div = document.createElement('div');
                         div.className = "relative flex flex-col items-center flex-shrink-0 w-16 h-20 p-1 bg-[#F0EEE9] rounded shadow-sm group";
                         div.innerHTML = `
@@ -79,11 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         div.querySelector('button').addEventListener('click', (ev) => {
                             ev.preventDefault();
                             accumulatedFiles.splice(index, 1);
-                            // Trigger a synthetic change event to re-render
-                            const dtRemove = new DataTransfer();
-                            accumulatedFiles.forEach(f => dtRemove.items.add(f));
-                            galleryInput.files = dtRemove.files;
-                            galleryInput.dispatchEvent(new Event('change'));
+                            renderGallery();
                         });
                         galleryPreviewContainer.appendChild(div);
                     }
@@ -94,13 +77,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 galleryPreviewContainer.classList.add('hidden');
                 galleryPreviewContainer.innerHTML = '';
             }
+        }
+
+        galleryInput.addEventListener('change', function (e) {
+            const newFiles = Array.from(e.target.files);
+
+            // Accumulate new files while respecting the limit of 6
+            let filesToAdd = newFiles.slice(0, 6 - accumulatedFiles.length);
+            accumulatedFiles = accumulatedFiles.concat(filesToAdd);
+
+            if (accumulatedFiles.length + (newFiles.length - filesToAdd.length) > 6) {
+                galleryError.textContent = `Erreur: Le maximum est de 6 images. Seules les premières ont été conservées.`;
+                galleryError.classList.remove('hidden');
+            } else {
+                galleryError.classList.add('hidden');
+            }
+
+            renderGallery();
         });
     }
 
     // Basic Validation before submit
     const form = document.getElementById('addGameForm');
     if (form) {
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', function (e) {
             const priceInput = document.getElementById('gamePrice').value;
             const heroInput = document.getElementById('gameHeroPic').files.length;
             const titleInput = document.getElementById('gameTitlePic').files.length;
