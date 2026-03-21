@@ -1,6 +1,6 @@
 <?php
 
-$basePath = $basePath ?? '';
+$basePath = $basePath ?? '/';
 $showLoginButton = !isset($showLoginButton) || $showLoginButton;
 $showProfilePic = $showProfilePic ?? false;
 require_once dirname(__DIR__, 2) . '/src/Security/AuthMiddleware.php';
