@@ -13,15 +13,8 @@ require_once $root_path . '/src/Enum/GameType.php';
 require_once $root_path . '/src/Enum/PegiAge.php';
 require_once $root_path . '/src/Enum/UserRole.php';
 
-// Check if the user is connected
-$isConnected = AuthMiddleware::is_connected($_SESSION);
-
 // Check if the user is admin
-$userRole = $_SESSION['userRole'] ?? null;
-$isAdmin = $userRole === UserRole::ADMIN->value;
-
-// Redirect if not admin
-if (!$isConnected || !$isAdmin) {
+if (!AuthMiddleware::is_admin($_SESSION)) {
     header('Location: ../index.php');
     exit();
 }
@@ -93,7 +86,7 @@ $games = $gameRepository->findAll();
         <?php
         $basePath = '../';
         $showLoginButton = false;
-        $showProfilePic = $isConnected;
+        $showProfilePic = true;
         $searchPlaceholder = 'Recherche :';
         include '../includes/header.php';
         ?>
