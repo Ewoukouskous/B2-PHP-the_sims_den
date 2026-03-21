@@ -28,6 +28,49 @@ $userAchievementRepository = new UserAchievementRepository();
 
 $userAccount = $currentUserId !== null ? $userAccountRepository->findById($currentUserId) : null;
 
+// --- PROFILE UPDATES ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $userAccount !== null) {
+    if (isset($_POST['update_pic']) && !empty($_POST['profile_pic'])) {
+        $newPath = ltrim($_POST['profile_pic'], '/');
+        foreach ($profilePicRepository->findAll() as $p) {
+            if (ltrim($p->getPicturePath(), '/') === $newPath) {
+                $userAccount->setIdProfilePic($p->getId());
+                $userAccountRepository->update($userAccount);
+                $_SESSION['profilePicPath'] = ltrim($p->getPicturePath(), '/');
+                break;
+            }
+        }
+        header("Location: profil.php");
+        exit();
+    }
+
+    if (isset($_POST['update_username']) && !empty(trim($_POST['username']))) {
+        $newUsername = trim($_POST['username']);
+        $userAccount->setUsername($newUsername);
+        $userAccountRepository->update($userAccount);
+        $_SESSION['username'] = $newUsername;
+        header("Location: profil.php");
+        exit();
+    }
+
+    if (isset($_POST['update_email']) && !empty(trim($_POST['email']))) {
+        $newEmail = trim($_POST['email']);
+        $userAccount->setEmail($newEmail);
+        $userAccountRepository->update($userAccount);
+        header("Location: profil.php");
+        exit();
+    }
+
+    if (isset($_POST['update_password']) && !empty($_POST['password']) && !empty($_POST['password_confirm'])) {
+        if ($_POST['password'] === $_POST['password_confirm']) {
+            $userAccount->setPasswordHash(password_hash($_POST['password'], PASSWORD_DEFAULT));
+            $userAccountRepository->update($userAccount);
+            header("Location: profil.php");
+            exit();
+        }
+    }
+}
+
 $username = $userAccount?->getUsername() ?? 'Invité';
 $memberSince = $userAccount?->getDateJoined()->format('d/m/Y') ?? '--/--/----';
 
@@ -35,7 +78,7 @@ $profilePicPath = 'img/profilePics/green_plumbob.png';
 if ($userAccount !== null) {
     $profilePic = $profilePicRepository->findById($userAccount->getIdProfilePic());
     if ($profilePic !== null) {
-        $profilePicPath = $profilePic->getPicturePath();
+        $profilePicPath = ltrim($profilePic->getPicturePath(), '/');
     }
 }
 
@@ -251,7 +294,7 @@ if ($currentUserId !== null) {
 
             <div class="pt-8 px-5 pb-5 space-y-2.5">
 
-                <div class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1.5">
+                <form method="POST" class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1.5">
                     <p class="text-[#3769a9] font-bold text-sm border-b-2 border-[#33b842] pb-0.5 w-fit">Photo de profil
                     </p>
                     <div class="flex items-center justify-around gap-2">
@@ -265,7 +308,7 @@ if ($currentUserId !== null) {
                         foreach ($pics as $pic): ?>
                             <label class="cursor-pointer flex flex-col items-center gap-1 group">
                                 <input type="radio" name="profile_pic" value="<?php echo htmlspecialchars($pic['path']); ?>"
-                                    class="hidden peer" <?php echo ($profilePicPath === $pic['path']) ? 'checked' : ''; ?>>
+                                    class="hidden peer" <?php echo (ltrim($profilePicPath, '/') === ltrim($pic['path'], '/')) ? 'checked' : ''; ?>>
                                 <div
                                     class="w-10 h-10 rounded-full border-2 border-transparent peer-checked:border-[#33b842] overflow-hidden shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] transition duration-200 group-hover:scale-105">
                                     <img src="../<?php echo htmlspecialchars($pic['path']); ?>"
@@ -276,14 +319,14 @@ if ($currentUserId !== null) {
                         <?php endforeach; ?>
                     </div>
                     <div class="flex justify-end mt-1">
-                        <button type="button"
+                        <button type="submit" name="update_pic"
                             class="px-5 py-1 bg-[#3769a9] hover:bg-[#2a5885] text-white text-xs font-bold rounded-full shadow-lg transition duration-200 hover:scale-105">
                             Enregistrer
                         </button>
                     </div>
-                </div>
+                </form>
 
-                <div class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1">
+                <form method="POST" class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1">
                     <label for="edit-username"
                         class="block text-[#3769a9] font-bold text-sm border-b-2 border-[#33b842] pb-0.5 w-fit">Nom
                         d'utilisateur</label>
@@ -291,14 +334,14 @@ if ($currentUserId !== null) {
                         value="<?php echo htmlspecialchars($username); ?>"
                         class="w-full px-4 py-1.5 text-sm bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-[#3769a9] font-medium outline-none focus:ring-2 focus:ring-[#3769a9] focus:ring-opacity-50 transition duration-200">
                     <div class="flex justify-end pt-1">
-                        <button type="button"
+                        <button type="submit" name="update_username"
                             class="px-5 py-1 bg-[#3769a9] hover:bg-[#2a5885] text-white text-xs font-bold rounded-full shadow-lg transition duration-200 hover:scale-105">
                             Enregistrer
                         </button>
                     </div>
-                </div>
+                </form>
 
-                <div class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1">
+                <form method="POST" class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1">
                     <label for="edit-email"
                         class="block text-[#3769a9] font-bold text-sm border-b-2 border-[#33b842] pb-0.5 w-fit">Adresse
                         e-mail</label>
@@ -306,14 +349,14 @@ if ($currentUserId !== null) {
                         value="<?php echo htmlspecialchars($userAccount?->getEmail() ?? ''); ?>"
                         class="w-full px-4 py-1.5 text-sm bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-[#3769a9] font-medium outline-none focus:ring-2 focus:ring-[#3769a9] focus:ring-opacity-50 transition duration-200">
                     <div class="flex justify-end pt-1">
-                        <button type="button"
+                        <button type="submit" name="update_email"
                             class="px-5 py-1 bg-[#3769a9] hover:bg-[#2a5885] text-white text-xs font-bold rounded-full shadow-lg transition duration-200 hover:scale-105">
                             Enregistrer
                         </button>
                     </div>
-                </div>
+                </form>
 
-                <div class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1">
+                <form method="POST" id="edit-password-form" class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1">
                     <p class="text-[#3769a9] font-bold text-sm border-b-2 border-[#33b842] pb-0.5 w-fit">Mot de passe
                     </p>
                     <div class="relative pb-2">
@@ -360,12 +403,12 @@ if ($currentUserId !== null) {
                     <p id="password-mismatch-msg" class="text-red-500 text-[10px] font-semibold hidden px-2">Les mots de
                         passe ne correspondent pas.</p>
                     <div class="flex justify-end pt-1">
-                        <button type="button" id="save-password-btn"
+                        <button type="submit" name="update_password" id="save-password-btn"
                             class="px-5 py-1 bg-[#3769a9] hover:bg-[#2a5885] text-white text-xs font-bold rounded-full shadow-lg transition duration-200 hover:scale-105">
                             Enregistrer
                         </button>
                     </div>
-                </div>
+                </form>
 
             </div>
         </div>
@@ -406,11 +449,12 @@ if ($currentUserId !== null) {
             document.getElementById('eye-slash-edit-confirm').classList.toggle('hidden');
         });
 
-        document.getElementById('save-password-btn')?.addEventListener('click', () => {
+        document.getElementById('edit-password-form')?.addEventListener('submit', (e) => {
             const pwd = document.getElementById('edit-password').value;
             const confirm = document.getElementById('edit-password-confirm').value;
             const msg = document.getElementById('password-mismatch-msg');
             if (pwd !== confirm) {
+                e.preventDefault();
                 msg.classList.remove('hidden');
             } else {
                 msg.classList.add('hidden');
