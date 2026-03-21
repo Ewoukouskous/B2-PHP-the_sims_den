@@ -158,12 +158,10 @@ $pegiAgeImage = 'age-' . $pegiAgeValue . '.jpg';
                                         <form id="favorite-form" method="post" action="../actions/favorite.php" class="hidden">
                                             <input type="hidden" name="action" value="<?php echo $isFavorite ? 'delete' : 'add'; ?>">
                                             <input type="hidden" name="gameId" value="<?php echo $gameId; ?>">
-                                            <?php if (!$isFavorite): ?>
-                                                <input type="hidden" name="playtimeHours" value="0">
-                                            <?php endif; ?>
+                                            <input type="hidden" name="playtimeHours" value="0">
                                         </form>
                                         <button type="button"
-                                                onclick="document.getElementById('favorite-form').submit();"
+                                                onclick="submitFavoriteForm(event, 'favorite-form', <?php echo $isFavorite ? 'false' : 'true'; ?>);"
                                                 class="bg-white p-3 rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] hover:scale-110 transition-transform"
                                                 aria-label="<?php echo $isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'; ?>">
                                             <?php if ($isFavorite): ?>
