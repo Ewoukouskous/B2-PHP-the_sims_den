@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 if (session_status() === PHP_SESSION_NONE) {session_start();}
 
@@ -356,10 +356,10 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['
                             </label>
                             <textarea id="gameDesc"
                                       name="gameDesc"
-                                      rows="1"
+                                      rows="3"
                                       required
                                       placeholder="Description du jeu"
-                                      class="w-full resize-none bg-transparent text-[#3769a9] text-sm border-b-2 border-[#3769a9] outline-none placeholder:text-[#3769a9]/40 pb-0.5"><?php echo htmlspecialchars($_POST['gameDesc'] ?? ''); ?></textarea>
+                                      class="w-full resize-y bg-transparent text-[#3769a9] text-sm border-b-2 border-[#3769a9] outline-none placeholder:text-[#3769a9]/40 pb-0.5"><?php echo htmlspecialchars($_POST['gameDesc'] ?? ''); ?></textarea>
                         </div>
 
                         <div>
