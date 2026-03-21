@@ -1,6 +1,8 @@
 <?php
 
-if (session_status() === PHP_SESSION_NONE) {session_start();}
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 // SELECT the actual DIR (public/actions), and ask the go up to the root (2 levels)
 $root_path = dirname(__DIR__, 2);
 
@@ -8,7 +10,7 @@ $root_path = dirname(__DIR__, 2);
 require_once $root_path . '/src/Security/AuthMiddleware.php';
 
 // Check if the user is connected, if not redirect to /public/auth/login.php
-if (!AuthMiddleware::is_connected($_SESSION)){
+if (!AuthMiddleware::is_connected($_SESSION)) {
     header('Location: /auth/login.php');
     exit();
 }
@@ -18,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['gam
 
     // Get the 'action' and 'gameId' values and normalize them
     $action = trim(strtolower($_POST['action']));
-    $gameId = filter_var($_POST['gameId'], FILTER_VALIDATE_INT) === false ? 0 : (int)$_POST['gameId'];
+    $gameId = filter_var($_POST['gameId'], FILTER_VALIDATE_INT) === false ? 0 : (int) $_POST['gameId'];
 
     // GET THE DEPENDENCIES
     require_once $root_path . '/src/Model/Game.php';
@@ -33,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['gam
     $game = $gameRepo->findById($gameId);
 
     if ($game !== null) {
-        $userId = (int)$_SESSION['userId'];
+        $userId = (int) $_SESSION['userId'];
 
         try {
             // Search if there is a 'user_favorite' associated to the gameId
@@ -44,7 +46,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['gam
                 // Get the 'playtimeHours' field value
                 $playtimeHours = filter_var($_POST['playtimeHours'] ?? 0, FILTER_VALIDATE_INT);
                 // If it's not an INT or is negative we set playtimeHours to 0
-                if ($playtimeHours === false || $playtimeHours < 0 ) {$playtimeHours = 0;}
+                if ($playtimeHours === false || $playtimeHours < 0) {
+                    $playtimeHours = 0;
+                }
 
                 // Create the UserFavorite and insert it in DB
                 $userFavorite = new UserFavorite($userId, $gameId, $playtimeHours);
