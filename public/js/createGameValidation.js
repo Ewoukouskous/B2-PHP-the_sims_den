@@ -38,37 +38,53 @@ document.addEventListener('DOMContentLoaded', () => {
     const galleryPlaceholder = document.getElementById('galleryPlaceholder');
     const galleryPreviewContainer = document.getElementById('galleryPreviewContainer');
     const galleryError = document.getElementById('galleryError');
+    let accumulatedFiles = [];
 
     if (galleryInput) {
         galleryInput.addEventListener('change', function(e) {
-            const files = Array.from(e.target.files);
+            const newFiles = Array.from(e.target.files);
             
-            if (files.length > 6) {
-                galleryError.textContent = `Erreur: Vous avez sélectionné ${files.length} fichiers. Le maximum est 6.`;
+            // Accumulate new files while respecting the limit of 6
+            let filesToAdd = newFiles.slice(0, 6 - accumulatedFiles.length);
+            accumulatedFiles = accumulatedFiles.concat(filesToAdd);
+            
+            if (accumulatedFiles.length + (newFiles.length - filesToAdd.length) > 6) {
+                galleryError.textContent = `Erreur: Le maximum est de 6 images. Seules les premières ont été conservées.`;
                 galleryError.classList.remove('hidden');
-                galleryPreviewContainer.innerHTML = '';
-                galleryPlaceholder.classList.remove('hidden');
-                galleryPreviewContainer.classList.add('hidden');
-                this.value = ''; // Reset
-                return;
             } else {
                 galleryError.classList.add('hidden');
             }
 
-            if (files.length > 0) {
+            // Sync the input state with accumulated files using DataTransfer
+            const dt = new DataTransfer();
+            accumulatedFiles.forEach(f => dt.items.add(f));
+            galleryInput.files = dt.files;
+
+            if (accumulatedFiles.length > 0) {
                 galleryPlaceholder.classList.add('hidden');
                 galleryPreviewContainer.classList.remove('hidden');
                 galleryPreviewContainer.innerHTML = ''; // Clear prev
 
-                files.forEach(file => {
+                accumulatedFiles.forEach((file, index) => {
                     const reader = new FileReader();
                     reader.onload = function(e) {
                         const div = document.createElement('div');
-                        div.className = "flex flex-col items-center flex-shrink-0 w-16 h-20 p-1 bg-[#F0EEE9] rounded shadow-sm";
+                        div.className = "relative flex flex-col items-center flex-shrink-0 w-16 h-20 p-1 bg-[#F0EEE9] rounded shadow-sm group";
                         div.innerHTML = `
+                            <button type="button" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition shadow" data-remove-idx="${index}">✕</button>
                             <img src="${e.target.result}" class="w-full h-12 object-contain rounded" alt="galerie">
                             <span class="text-[8px] text-[#3769a9] truncate w-full mt-1 text-center font-semibold" title="${file.name}">${file.name}</span>
                         `;
+                        // Remove image event listener
+                        div.querySelector('button').addEventListener('click', (ev) => {
+                            ev.preventDefault();
+                            accumulatedFiles.splice(index, 1);
+                            // Trigger a synthetic change event to re-render
+                            const dtRemove = new DataTransfer();
+                            accumulatedFiles.forEach(f => dtRemove.items.add(f));
+                            galleryInput.files = dtRemove.files;
+                            galleryInput.dispatchEvent(new Event('change'));
+                        });
                         galleryPreviewContainer.appendChild(div);
                     }
                     reader.readAsDataURL(file);

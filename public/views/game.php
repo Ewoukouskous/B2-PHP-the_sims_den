@@ -10,9 +10,11 @@ require_once $root_path . '/src/Database/DatabaseConnection.php';
 require_once $root_path . '/src/Model/Game.php';
 require_once $root_path . '/src/Model/GamePegiDescriptor.php';
 require_once $root_path . '/src/Model/PegiDescriptor.php';
+require_once $root_path . '/src/Model/GameMedia.php';
 require_once $root_path . '/src/Repository/GameRepository.php';
 require_once $root_path . '/src/Repository/GamePegiDescriptorRepository.php';
 require_once $root_path . '/src/Repository/PegiDescriptorRepository.php';
+require_once $root_path . '/src/Repository/GameMediaRepository.php';
 require_once $root_path . '/src/Enum/GameType.php';
 require_once $root_path . '/src/Enum/PegiAge.php';
 
@@ -23,6 +25,9 @@ $gameId = isset($_GET['id']) ? (int)$_GET['id'] : 1;
 
 $gameRepository = new GameRepository();
 $game = $gameRepository->findById($gameId);
+
+$gameMediaRepo = new GameMediaRepository();
+$gameMedias = $gameMediaRepo->findByGameId($gameId);
 
 // If the game is not found, redirect to the homepage
 if (!$game) {
@@ -205,18 +210,59 @@ $typeLabel = match($game->getGameType()) {
                         </h2>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-                        <?php for ($i = 0; $i < 3; $i++): ?>
-                        <div class="relative h-64 w-full overflow-hidden rounded-[2rem]">
-                            <img src="../<?php echo htmlspecialchars($game->getImageTitlePath()); ?>"
-                                 alt="Image carousel <?php echo $i + 1; ?>"
-                                 class="w-full h-full object-cover"
-                                 onerror="this.onerror=null; this.src='../img/plumbob.webp';">
+                    <?php if (empty($gameMedias)): ?>
+                        <p class="text-[#3769a9] col-span-full">Aucun média disponible pour ce jeu.</p>
+                    <?php else: ?>
+                        <div id="carouselWrapper" class="relative w-full overflow-hidden rounded-[2rem] bg-[#F0EEE9] p-4 shadow-inner">
+                            <div id="carouselTrack" class="flex overflow-x-auto gap-4 scroll-smooth hide-scrollbar w-full snap-x snap-mandatory">
+                                <?php foreach ($gameMedias as $index => $media): ?>
+                                <div class="snap-center shrink-0 w-full md:w-96 h-64 relative overflow-hidden rounded-[1.5rem] shadow-lg border-[3px] border-transparent hover:border-[#33b842] transition duration-300">
+                                    <img src="../<?php echo htmlspecialchars($media->getFilePath()); ?>"
+                                         alt="Image galerie <?php echo $index + 1; ?>"
+                                         class="w-full h-full object-cover"
+                                         onerror="this.onerror=null; this.src='../img/plumbob.webp';">
+                                </div>
+                                <?php endforeach; ?>
+                            </div>
                         </div>
-                        <?php endfor; ?>
 
-                    </div>
+                        <script>
+                            document.addEventListener('DOMContentLoaded', () => {
+                                const track = document.getElementById('carouselTrack');
+                                if (!track) return;
+
+                                let scrollSpeed = 1; // pixel per frame
+                                let direction = 1;
+                                let isHovered = false;
+                                let animationFrameId;
+
+                                track.addEventListener('mouseenter', () => isHovered = true);
+                                track.addEventListener('mouseleave', () => isHovered = false);
+                                track.addEventListener('touchstart', () => isHovered = true);
+                                track.addEventListener('touchend', () => isHovered = false);
+
+                                function autoScroll() {
+                                    if (!isHovered) {
+                                        track.scrollLeft += scrollSpeed * direction;
+                                        
+                                        // Bounce when reaching ends
+                                        if (track.scrollLeft + track.clientWidth >= track.scrollWidth - 1) {
+                                            direction = -1; // Go left
+                                        } else if (track.scrollLeft <= 0) {
+                                            direction = 1; // Go right
+                                        }
+                                    }
+                                    animationFrameId = requestAnimationFrame(autoScroll);
+                                }
+                                
+                                // Start animation if content overflows
+                                if (track.scrollWidth > track.clientWidth) {
+                                    animationFrameId = requestAnimationFrame(autoScroll);
+                                }
+                            });
+                        </script>
+                    <?php endif; ?>
+
                 </div>
 
             </div>
