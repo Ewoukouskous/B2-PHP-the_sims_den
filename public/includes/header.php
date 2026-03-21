@@ -3,7 +3,8 @@
 $basePath = $basePath ?? '';
 $showLoginButton = !isset($showLoginButton) || $showLoginButton;
 $showProfilePic = $showProfilePic ?? false;
-$showAdminButton = $showAdminButton ?? false;
+require_once dirname(__DIR__, 2) . '/src/Security/AuthMiddleware.php';
+$showAdminButton = $showAdminButton ?? AuthMiddleware::is_admin($_SESSION);
 $searchPlaceholder = $searchPlaceholder ?? 'Recherche :';
 
 $username = $_SESSION['username'] ?? '';

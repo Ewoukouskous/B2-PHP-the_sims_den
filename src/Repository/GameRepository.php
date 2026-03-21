@@ -123,7 +123,7 @@ class GameRepository {
     // READ [ALL] : Get all game from the database
     public function findAll() : array {
         // Because there is no named parameters (no custom parameters), we don't need to prepare the SQL string before
-        $statement = $this->pdo->query("SELECT * FROM game;");
+        $statement = $this->pdo->query("SELECT * FROM game ORDER BY id DESC;");
         // We get all the rows resulted for our previous query
         $rows = $statement->fetchAll();
 

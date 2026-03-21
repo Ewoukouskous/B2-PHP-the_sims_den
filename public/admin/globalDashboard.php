@@ -22,13 +22,6 @@ if (!AuthMiddleware::is_admin($_SESSION)) {
     exit();
 }
 
-function formatUserRoleLabel(UserRole $role): string {
-    return match ($role) {
-        UserRole::ADMIN => 'Administrateur',
-        UserRole::USER => 'Utilisateur'
-    };
-}
-
 function formatShortDate(?DateTime $date): string {
     if ($date === null) {
         return 'Jamais';
@@ -42,78 +35,109 @@ if (!in_array($activeTab, ['games', 'users'], true)) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'deleteGame') {
-    $gameIdRaw = $_POST['gameId'] ?? '';
-    $gameIdString = trim((string)$gameIdRaw);
 
-    if ($gameIdString !== '' && ctype_digit($gameIdString)) {
-        $gameRepository = new GameRepository();
-        $gameRepository->delete((int)$gameIdString);
-    }
+    // DEPENDENCIES TO REMOVE A GAME
+    require_once $root_path . '/src/Model/Game.php';
+    require_once $root_path . '/src/Model/GameMedia.php';
+    require_once $root_path . '/src/Repository/GameRepository.php';
+    require_once $root_path . '/src/Repository/GameMediaRepository.php';
 
-    header('Location: globalDashboard.php?tab=games');
-    exit();
-}
+    if (isset($_POST['gameId'])) {
+        $gameRepo = new GameRepository();
+        // Check if the sent game exist
+        $game = $gameRepo->findById((int)$_POST['gameId']);
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'deleteUser') {
-    $userIdRaw = $_POST['userId'] ?? '';
-    $userIdString = trim((string)$userIdRaw);
-    $currentUserId = isset($_SESSION['userId']) ? (int)$_SESSION['userId'] : null;
+        if ($game !== null) {
+            try {
+                // Get the path of the heroPic and titlePic (dbPath is /img/games/.... , so we add the /public to get the absolute path)
+                $titlePicPath = $root_path . '/public' . $game->getImageTitlePath();
+                $heroPicPath = $root_path . '/public' . $game->getImageHeroPath();
+                // Check if the two pics exists, if yes delete them
+                if (file_exists($titlePicPath)) {unlink($titlePicPath);}
+                if (file_exists($heroPicPath)) {unlink($heroPicPath);}
 
-    if ($userIdString !== '' && ctype_digit($userIdString)) {
-        $userId = (int)$userIdString;
-        // Security guard: an admin cannot delete their own account from this screen.
-        if ($currentUserId === null || $userId !== $currentUserId) {
-            $userRepository = new UserAccountRepository();
-            if ($userRepository->findById($userId) !== null) {
-                $userRepository->delete($userId);
+                // Now get all the gameMedia linked to the game to get their path after
+                $gameMedias = (new GameMediaRepository())->findByGameId($game->getId());
+
+                // Check if the game has gameMedias
+                if (!empty($gameMedias)) {
+                    foreach($gameMedias as $media) {
+                        $mediaPath = $root_path . '/public' . $media->getFilePath();
+                        // If the file exist we delete it, else we do nothing
+                        if (file_exists($mediaPath)) {
+                            unlink($mediaPath);
+                        }
+                    }
+                }
+                // Now if we go there it's means that everything before goes good (all files has been deleted)
+                // so we can delete the game in the database (and the db will delete all GamePegiDescriptors and GameMedia associated
+                $gameRepo->delete($game->getId());
+                // Then redirect
+                header("Location: globalDashboard.php?tab=games");
+                exit();
             }
+            catch (Exception $exception) {
+                $error_msg = "Erreur lors de la suppression de '" . $game->getGameName() . "' :\"" .$exception->getMessage() . "\"";
+            }
+        } else {
+            $error_msg = "Erreur, le jeu que vous souhaité supprimer n'existe pas dans la base de données";
         }
     }
-
-    header('Location: globalDashboard.php?tab=users');
-    exit();
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'changeUserRole') {
-    $userIdRaw = $_POST['userId'] ?? '';
-    $userIdString = trim((string)$userIdRaw);
-    $newRoleRaw = strtolower(trim((string)($_POST['newUserRole'] ?? '')));
-    $currentUserId = isset($_SESSION['userId']) ? (int)$_SESSION['userId'] : null;
+$error_msg = "";
+$userRepository = new UserAccountRepository();
 
-    $redirectUrl = 'globalDashboard.php?tab=users';
-    if ($userIdString !== '' && ctype_digit($userIdString)) {
-        $redirectUrl .= '&selectedUser=' . $userIdString;
-    }
-
-    if ($userIdString !== '' && ctype_digit($userIdString)) {
-        $userId = (int)$userIdString;
-
-        $newRole = null;
-        try {
-            $newRole = UserRole::from($newRoleRaw);
-        } catch (ValueError) {
-            $newRole = null;
-        }
-
-        if ($newRole !== null && ($currentUserId === null || $userId !== $currentUserId)) {
-            $userRepository = new UserAccountRepository();
-            $userToUpdate = $userRepository->findById($userId);
-
-            if ($userToUpdate !== null) {
+// Check if it's a POST request that contain a 'action' field that contains 'changeUserRole' and 'userId'
+if($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['action'] === 'changeUserRole' && isset($_POST['userId'])) {
+    // Check that the request isn't for the user that initiate it (so you can't demote yourself)
+    if ((int)$_POST['userId'] !== (int)$_SESSION['userId']) {
+        // Check that the userId correspond to an actual user in the database
+        $userToUpdate = $userRepository->findById((int)$_POST['userId']);
+        if(!is_null($userToUpdate)) {
+            // We change the user role with the select value
+            $newRoleRaw = strtolower(trim((string)($_POST['newUserRole'] ?? '')));
+            try {
+                $newRole = UserRole::from($newRoleRaw);
                 $userToUpdate->setUserRole($newRole);
+                // Then update the user in DB
                 $userRepository->update($userToUpdate);
+                // Now we redirect
+                header("Location: globalDashboard.php?tab=users&selectedUser=" . $userToUpdate->getId());
+                exit();
+            } catch (ValueError) {
+                $error_msg = "Erreur, le rôle sélectionné est invalide.";
             }
+        } else {
+            $error_msg = "Erreur, l'utilisateur que vous essayez de modifier n'existe pas.";
         }
+    } else {
+        $error_msg = "Erreur, il est impossible de modifier le rôle de votre propre compte.";
     }
+}
 
-    header('Location: ' . $redirectUrl);
-    exit();
+// Check if it's a POST request that contain a 'action' field that contains 'deleteUser' and 'userId'
+if($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['action'] === 'deleteUser' && isset($_POST['userId'])) {
+    // Check that the request isn't for the user that initiate it (so you can't delete yourself)
+    if ((int)$_POST['userId'] !== (int)$_SESSION['userId']) {
+        // Check that the userId correspond to an actual user in the database
+        $userToDelete = $userRepository->findById((int)$_POST['userId']);
+        if(!is_null($userToDelete)) {
+            // We delete the user
+            $userRepository->delete($userToDelete->getId());
+            // Now we redirect
+            header("Location: globalDashboard.php?tab=users");
+            exit();
+        } else {
+            $error_msg = "Erreur, l'utilisateur que vous essayez de supprimer n'existe pas.";
+        }
+    } else {
+        $error_msg = "Erreur, il est impossible de supprimer votre propre compte.";
+    }
 }
 
 $gameRepository = new GameRepository();
 $games = $gameRepository->findAll();
-
-$userRepository = new UserAccountRepository();
 $profilePicRepository = new ProfilePicRepository();
 $userAchievementRepository = new UserAchievementRepository();
 $userFavoriteRepository = new UserFavoriteRepository();
@@ -133,7 +157,7 @@ foreach ($users as $user) {
     $userRows[$userId] = [
         'id' => $userId,
         'username' => $user->getUsername(),
-        'roleLabel' => formatUserRoleLabel($user->getUserRole()),
+        'roleLabel' => ucfirst($user->getUserRole()->value),
         'roleValue' => $user->getUserRole()->value,
         'dateJoined' => $user->getDateJoined(),
         'lastLogin' => $user->getLastLogin(),
@@ -218,6 +242,12 @@ $canEditSelectedUserRole = $canDeleteSelectedUser;
             </div>
         </div>
 
+        <?php if (!empty($error_msg)): ?>
+            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)]" role="alert">
+                <span class="block sm:inline font-bold"><?php echo htmlspecialchars($error_msg); ?></span>
+            </div>
+        <?php endif; ?>
+
         <?php if ($activeTab === 'games'): ?>
             <div class="bg-[#F0EEE9] bg-opacity-80 rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-6 space-y-5 flex-1 min-h-0 flex flex-col overflow-hidden">
                 <div class="flex items-center justify-between gap-6">
@@ -226,7 +256,7 @@ $canEditSelectedUserRole = $canDeleteSelectedUser;
                     <a href="gameDashboard.php">
                         <button type="button"
                                 class="px-8 py-3 bg-[#33b842] text-white font-bold rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(0,0,0,0.1)] border border-white/20 hover:bg-[#2a9636] transition duration-200 ease-in-out">
-                            + Creer un jeu
+                            + Créer un jeu
                         </button>
                     </a>
                 </div>
@@ -237,9 +267,9 @@ $canEditSelectedUserRole = $canDeleteSelectedUser;
                             <p class="text-2xl text-[#3769a9] font-bold">Aucun jeu cree pour le moment</p>
                         </div>
                     <?php else: ?>
-                        <div class="grid grid-cols-1 gap-4 h-full min-h-0 overflow-y-auto pr-2">
+                        <div class="flex flex-col gap-4 h-full min-h-0 overflow-y-auto pr-2">
                             <?php foreach ($games as $game): ?>
-                                <div class="bg-white rounded-2xl shadow-md p-6 flex items-center justify-between border-l-4 border-[#33b842] hover:shadow-lg transition-shadow duration-200">
+                                <div class="bg-white rounded-2xl shadow-md p-4 flex items-center justify-between border-l-4 border-[#33b842] hover:shadow-lg transition-shadow duration-200">
                                     <div class="flex items-center gap-6 flex-1">
                                         <div class="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg">
                                             <img src="../<?php echo htmlspecialchars($game->getImageTitlePath()); ?>"
@@ -249,15 +279,15 @@ $canEditSelectedUserRole = $canDeleteSelectedUser;
                                         </div>
 
                                         <div class="flex-1">
-                                            <h2 class="text-xl font-bold text-[#3769a9]"><?php echo htmlspecialchars($game->getGameName()); ?></h2>
+                                            <h2 class="text-xl font-bold text-[#3769a9]">
+                                                <a href="../views/game.php?id=<?php echo $game->getId(); ?>" class="hover:underline hover:text-blue-700 transition-colors">
+                                                    <?php echo htmlspecialchars($game->getGameName()); ?>
+                                                </a>
+                                            </h2>
                                             <p class="text-sm text-gray-600 line-clamp-1"><?php echo htmlspecialchars($game->getGameDesc()); ?></p>
                                             <div class="flex gap-3 mt-2">
-                                                <span class="text-xs bg-[#33b842] text-white px-3 py-1 rounded-full font-medium">
-                                                    <?php echo match($game->getGameType()) {
-                                                        GameType::PC => 'PC',
-                                                        GameType::CONSOLE => 'Console',
-                                                        GameType::SMARTPHONE => 'Smartphone'
-                                                    }; ?>
+                                                <span class="text-xs bg-[#33b842] text-white px-3 py-1 rounded-full font-medium capitalize">
+                                                    <?php echo htmlspecialchars($game->getGameType()->value); ?>
                                                 </span>
                                                 <span class="text-xs bg-[#3769a9] text-white px-3 py-1 rounded-full font-medium">
                                                     PEGI <?php echo htmlspecialchars($game->getPegiAge()->value); ?>
@@ -268,7 +298,7 @@ $canEditSelectedUserRole = $canDeleteSelectedUser;
 
                                     <div class="flex items-center gap-6 flex-shrink-0">
                                         <div class="text-right">
-                                            <p class="text-2xl font-bold text-[#33b842]"><?php echo number_format($game->getPrice(), 2, ',', ' '); ?> EUR</p>
+                                            <p class="text-2xl font-bold text-[#33b842]"><?php echo number_format($game->getPrice(), 2, ',', ' '); ?> €</p>
                                         </div>
 
                                         <button type="button"
@@ -356,7 +386,7 @@ $canEditSelectedUserRole = $canDeleteSelectedUser;
                                         <?php foreach (UserRole::cases() as $role): ?>
                                             <option value="<?php echo htmlspecialchars($role->value); ?>"
                                                 <?php echo $selectedUser['roleValue'] === $role->value ? 'selected' : ''; ?>>
-                                                <?php echo htmlspecialchars(formatUserRoleLabel($role)); ?>
+                                                <?php echo htmlspecialchars(ucfirst($role->value)); ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
