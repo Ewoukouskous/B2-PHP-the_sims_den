@@ -34,34 +34,40 @@ if (!in_array($activeTab, ['games', 'users'], true)) {
     $activeTab = 'games';
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'deleteGame') {
+// Check if it's a POST request that contain a 'action' field that contains 'deleteGame'
+if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['action'] === 'deleteGame') {
 
     // DEPENDENCIES TO REMOVE A GAME
     require_once $root_path . '/src/Model/Game.php';
-    require_once $root_path . '/src/Model/GameMedia.php';
     require_once $root_path . '/src/Repository/GameRepository.php';
+    require_once $root_path . '/src/Model/GameMedia.php';
     require_once $root_path . '/src/Repository/GameMediaRepository.php';
 
     if (isset($_POST['gameId'])) {
         $gameRepo = new GameRepository();
-        // Check if the sent game exist
-        $game = $gameRepo->findById((int)$_POST['gameId']);
+        $gameId = (int)$_POST['gameId'];
+        $game = $gameRepo->findById($gameId);
 
         if ($game !== null) {
+
             try {
                 // Get the path of the heroPic and titlePic (dbPath is /img/games/.... , so we add the /public to get the absolute path)
                 $titlePicPath = $root_path . '/public' . $game->getImageTitlePath();
                 $heroPicPath = $root_path . '/public' . $game->getImageHeroPath();
                 // Check if the two pics exists, if yes delete them
-                if (file_exists($titlePicPath)) {unlink($titlePicPath);}
-                if (file_exists($heroPicPath)) {unlink($heroPicPath);}
+                if (file_exists($titlePicPath)) {
+                    unlink($titlePicPath);
+                }
+                if (file_exists($heroPicPath)) {
+                    unlink($heroPicPath);
+                }
 
                 // Now get all the gameMedia linked to the game to get their path after
                 $gameMedias = (new GameMediaRepository())->findByGameId($game->getId());
 
                 // Check if the game has gameMedias
                 if (!empty($gameMedias)) {
-                    foreach($gameMedias as $media) {
+                    foreach ($gameMedias as $media) {
                         $mediaPath = $root_path . '/public' . $media->getFilePath();
                         // If the file exist we delete it, else we do nothing
                         if (file_exists($mediaPath)) {
@@ -73,14 +79,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') ==
                 // so we can delete the game in the database (and the db will delete all GamePegiDescriptors and GameMedia associated
                 $gameRepo->delete($game->getId());
                 // Then redirect
-                header("Location: globalDashboard.php?tab=games");
+                header("Location: /admin/globalDashboard.php");
                 exit();
+            } catch (Exception $e) {
+                // Log the error or handle it appropriately
+                error_log('Error deleting game: ' . $e->getMessage());
             }
-            catch (Exception $exception) {
-                $error_msg = "Erreur lors de la suppression de '" . $game->getGameName() . "' :\"" .$exception->getMessage() . "\"";
-            }
-        } else {
-            $error_msg = "Erreur, le jeu que vous souhaité supprimer n'existe pas dans la base de données";
         }
     }
 }
