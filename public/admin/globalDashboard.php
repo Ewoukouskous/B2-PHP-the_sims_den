@@ -35,16 +35,55 @@ if (!in_array($activeTab, ['games', 'users'], true)) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && (string)($_POST['action'] ?? '') === 'deleteGame') {
+
+    // DEPENDENCIES TO REMOVE A GAME
+    require_once $root_path . '/src/Model/Game.php';
+    require_once $root_path . '/src/Model/GameMedia.php';
+    require_once $root_path . '/src/Repository/GameRepository.php';
+    require_once $root_path . '/src/Repository/GameMediaRepository.php';
+
     $gameIdRaw = $_POST['gameId'] ?? '';
     $gameIdString = trim((string)$gameIdRaw);
 
     if ($gameIdString !== '' && ctype_digit($gameIdString)) {
-        $gameRepository = new GameRepository();
-        $gameRepository->delete((int)$gameIdString);
+        $gameRepo = new GameRepository();
+        $gameId = (int)$gameIdString;
+        $game = $gameRepo->findById($gameId);
+
+        if ($game !== null) {
+            try {
+                // Get the path of the heroPic and titlePic (dbPath is /img/games/.... , so we add the /public to get the absolute path)
+                $titlePicPath = $root_path . '/public' . $game->getImageTitlePath();
+                $heroPicPath = $root_path . '/public' . $game->getImageHeroPath();
+                // Check if the two pics exists, if yes delete them
+                if (file_exists($titlePicPath)) {unlink($titlePicPath);}
+                if (file_exists($heroPicPath)) {unlink($heroPicPath);}
+
+                // Now get all the gameMedia linked to the game to get their path after
+                $gameMedias = (new GameMediaRepository())->findByGameId($gameId);
+
+                // Check if the game has gameMedias
+                if (!empty($gameMedias)) {
+                    foreach($gameMedias as $media) {
+                        $mediaPath = $root_path . '/public' . $media->getFilePath();
+                        // If the file exist we delete it, else we do nothing
+                        if (file_exists($mediaPath)) {
+                            unlink($mediaPath);
+                        }
+                    }
+                }
+                // Now delete the game in the database
+                $gameRepo->delete($gameId);
+            } catch (Exception $exception) {
+                $error_msg = "Erreur lors de la suppression de '" . $game->getGameName() . "' :\"" .$exception->getMessage() . "\"";
+            }
+        }
     }
 
-    header('Location: globalDashboard.php?tab=games');
-    exit();
+    if (empty($error_msg)) {
+        header('Location: globalDashboard.php?tab=games');
+        exit();
+    }
 }
 
 $error_msg = "";
