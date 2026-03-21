@@ -119,7 +119,7 @@ $typeLabel = match($game->getGameType()) {
                             <div class="relative h-48 w-full overflow-hidden rounded-[2rem]">
                                 <img src="../<?php echo htmlspecialchars($game->getImageTitlePath()); ?>"
                                      alt="Miniature <?php echo htmlspecialchars($game->getGameName()); ?>"
-                                     class="w-full h-full object-cover"
+                                     class="w-full h-full object-contain"
                                      onerror="this.onerror=null; this.src='../img/plumbob.webp';">
                             </div>
 
