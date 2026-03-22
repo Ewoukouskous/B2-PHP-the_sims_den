@@ -130,7 +130,8 @@ if($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['a
             // We delete the user
             $userRepository->delete($userToDelete->getId());
 
-            // Unlock the 'Faucheuse' achievement for the admin
+            // Unlock the 'Faucheuse' ac
+            // hievement for the admin
             require_once $root_path . '/src/Service/AchievementService.php';
             $achievementService = new AchievementService();
             $achievementService->unlockSpecificAchievement((int)$_SESSION['userId'], "Faucheuse");

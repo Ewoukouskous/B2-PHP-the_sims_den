@@ -635,6 +635,6 @@ if ($targetUserId !== null) {
             }
         </script>
     <?php endif; ?>
-</body>
 
+</body>
 </html>
