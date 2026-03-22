@@ -134,6 +134,20 @@ class GameRepository {
         }
         return $games;
     }
+    // READ [SEARCH] : Search for games by name (using LIKE)
+    public function search(string $query) : array {
+        $sqlRequest = "SELECT * FROM game WHERE game_name LIKE :query ORDER BY id DESC;";
+        $statement = $this->pdo->prepare($sqlRequest);
+        $statement->execute(['query' => '%' . $query . '%']);
+        $rows = $statement->fetchAll();
+
+        $games = [];
+        foreach($rows as $row) {
+            $games[] = $this->rowToGame($row);
+        }
+        return $games;
+    }
+
     // UPDATE : Update a game from the database by its id
     public function update(Game $game) : void {
         // We prepare the SQL request string with named parameters (to avoid SQL injections)

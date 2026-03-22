@@ -22,7 +22,12 @@ $currentUserId = ($isConnected && isset($_SESSION['userId']) && is_numeric($_SES
 $gameRepository = new GameRepository();
 $userFavoriteRepository = new UserFavoriteRepository();
 
-$games = $gameRepository->findAll();
+$searchQuery = $_GET['search'] ?? '';
+if (!empty($searchQuery)) {
+    $games = $gameRepository->search($searchQuery);
+} else {
+    $games = $gameRepository->findAll();
+}
 
 $favoriteGameIds = [];
 if ($currentUserId !== null) {
