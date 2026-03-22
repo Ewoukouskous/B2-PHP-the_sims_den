@@ -75,7 +75,7 @@ if ($currentUserId !== null) {
 
         <div class="absolute top-28 bottom-6 w-full max-w-7xl px-4 overflow-y-auto pt-2">
 
-            <div class="space-y-3 pb-2">
+            <div class="space-y-3 pb-12">
                 <?php if (empty($favoriteGames)): ?>
                     <section
                         class="bg-[#F0EEE9] bg-opacity-90 rounded-[1.8rem] shadow-[0px_8px_0px_0px_rgba(51,184,66,0.9)] p-5 text-[#3769a9] text-xl font-medium text-center">
