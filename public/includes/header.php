@@ -11,6 +11,33 @@ $headerUsername = $_SESSION['username'] ?? 'Invité';
 $headerProfilePicPath = $_SESSION['profilePicPath'] ?? 'img/profilePics/green_plumbob.png';
 ?>
 
+<style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+        width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+        background: rgba(240, 238, 233, 0.5);
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: #3769a9;
+        border-radius: 5px;
+        border: 2px solid #F0EEE9;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: #2a5885;
+    }
+
+    /* Firefox */
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: #3769a9 rgba(240, 238, 233, 0.5);
+    }
+</style>
+
 <div class="fixed top-0 left-0 w-full flex justify-center px-4 z-50">
     <div id="navbar"
         class="relative w-full h-12 max-w-7xl p-4 mt-16 bg-[#F0EEE9] bg-opacity-80 rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)]">
