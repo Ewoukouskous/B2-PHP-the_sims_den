@@ -24,11 +24,7 @@ if ($currentUserId !== null) {
             continue;
         }
 
-        $typeLabel = match ($game->getGameType()) {
-            GameType::PC => 'PC',
-            GameType::CONSOLE => 'Console',
-            GameType::SMARTPHONE => 'Smartphone'
-        };
+        $typeLabel = $game->getGameType() === GameType::PC ? 'PC' : ucfirst($game->getGameType()->value);
 
         $favoriteGames[] = [
             'id' => $game->getId(),

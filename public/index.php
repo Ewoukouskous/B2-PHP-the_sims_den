@@ -136,14 +136,7 @@ if ($currentUserId !== null) {
                                 <div class="flex items-center">
                                     <span
                                         class="pointer-events-auto bg-[#33b842] text-white text-[10px] font-bold px-4 py-2 rounded-full shadow-[0px_2px_0px_1.5px_rgba(0,0,0,0.1)] border border-white/20 whitespace-nowrap">
-                                        <?php
-                                        $typeLabel = match ($game->getGameType()) {
-                                            GameType::PC => 'PC',
-                                            GameType::CONSOLE => 'Console',
-                                            GameType::SMARTPHONE => 'Smartphone'
-                                        };
-                                        echo $typeLabel;
-                                        ?>
+                                        <?php echo $game->getGameType() === GameType::PC ? 'PC' : ucfirst($game->getGameType()->value); ?>
                                     </span>
                                 </div>
 
