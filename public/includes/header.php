@@ -100,7 +100,7 @@ $profilePicPath = $_SESSION['profilePicPath'] ?? 'img/profilePics/green_plumbob.
                     </button>
                 </a>
 
-                <a href="<?php echo $basePath; ?>views/favories.php">
+                <a href="<?php echo $basePath; ?>views/favoriteList.php">
                     <button type="button"
                             class="px-6 py-1 bg-[#F0EEE9] bg-opacity-80 rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-[#3769a9] font-medium outline-none hover:ring-2 hover:ring-[#3769a9] hover:ring-opacity-50 transition duration-200 ease-in-out">
                         Ma liste de favoris
