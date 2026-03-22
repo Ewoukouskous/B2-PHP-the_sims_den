@@ -71,19 +71,18 @@ class AchievementService {
         if ($action === 'add') {
             $favoriteCount = $this->userFavoriteRepository->countByUserId($idUser);
             // Start unlocking achievement by quantity threshold
-            switch ($favoriteCount) {
-                case 1 :
-                    $this->checkAndUnlock($idUser, $userAchievements, "Néophyte");
-                    break;
-                case 5 :
-                    $this->checkAndUnlock($idUser, $userAchievements, "Petit Joueur");
-                    break;
-                case 10 :
-                    $this->checkAndUnlock($idUser, $userAchievements, "Compulsif");
-                    break;
-                case 20 :
-                    $this->checkAndUnlock($idUser, $userAchievements, "Fanatique");
-                    break;
+            // Start unlocking achievement by quantity threshold
+            if ($favoriteCount >= 20) {
+                $this->checkAndUnlock($idUser, $userAchievements, "Fanatique");
+            }
+            if ($favoriteCount >= 10) {
+                $this->checkAndUnlock($idUser, $userAchievements, "Compulsif");
+            }
+            if ($favoriteCount >= 5) {
+                $this->checkAndUnlock($idUser, $userAchievements, "Petit joueur");
+            }
+            if ($favoriteCount >= 1) {
+                $this->checkAndUnlock($idUser, $userAchievements, "Néophyte");
             }
             // Now check wich achievement to unlock by gameType
             $game = $this->gameRepository->findById($idGame);

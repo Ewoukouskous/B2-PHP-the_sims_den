@@ -129,6 +129,12 @@ if($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['a
         if(!is_null($userToDelete)) {
             // We delete the user
             $userRepository->delete($userToDelete->getId());
+
+            // Unlock the 'Faucheuse' achievement for the admin
+            require_once $root_path . '/src/Service/AchievementService.php';
+            $achievementService = new AchievementService();
+            $achievementService->unlockSpecificAchievement((int)$_SESSION['userId'], "Faucheuse");
+
             // Now we redirect
             header("Location: globalDashboard.php?tab=users");
             exit();
