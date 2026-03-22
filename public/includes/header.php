@@ -11,8 +11,9 @@ $headerUsername = $_SESSION['username'] ?? 'Invité';
 $headerProfilePicPath = $_SESSION['profilePicPath'] ?? 'img/profilePics/green_plumbob.png';
 ?>
 
-<div id="navbar"
-    class="relative w-full h-12 max-w-7xl p-4 mt-2 bg-[#F0EEE9] bg-opacity-80 rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)]">
+<div class="fixed top-0 left-0 w-full flex justify-center px-4 z-50">
+    <div id="navbar"
+        class="relative w-full h-12 max-w-7xl p-4 mt-16 bg-[#F0EEE9] bg-opacity-80 rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)]">
 
     <div id="navbar-content" class="grid grid-cols-[repeat(7,1fr)] grid-rows-1 gap-2 h-full">
 
@@ -108,6 +109,8 @@ $headerProfilePicPath = $_SESSION['profilePicPath'] ?? 'img/profilePics/green_pl
         </div>
 
     </div>
+
+</div>
 
 </div>
 

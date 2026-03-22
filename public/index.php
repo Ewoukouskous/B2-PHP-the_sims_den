@@ -14,7 +14,7 @@ require_once $root_path . '/src/Enum/PegiAge.php';
 require_once $root_path . '/src/Enum/UserRole.php';
 
 // Déterminer si l'utilisateur est connecté
-$isConnected = AuthMiddleware::is_connected($_SESSION);
+$isConnected = AuthMiddleware::is_connected();
 $userRole = $_SESSION['userRole'] ?? null;
 $isAdmin = $userRole === UserRole::ADMIN->value;
 $currentUserId = ($isConnected && isset($_SESSION['userId']) && is_numeric($_SESSION['userId'])) ? (int) $_SESSION['userId'] : null;
@@ -47,7 +47,7 @@ if ($currentUserId !== null) {
             onerror="this.style.display='none';">
     </div>
 
-    <div id="content" class="relative flex justify-center h-screen p-4 pt-12">
+    <div id="content" class="relative flex justify-center h-screen p-4 pt-40">
 
         <!--        NAVBAR Section-->
 
