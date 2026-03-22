@@ -28,49 +28,95 @@ $userAchievementRepository = new UserAchievementRepository();
 
 $userAccount = $currentUserId !== null ? $userAccountRepository->findById($currentUserId) : null;
 
+$errors = $_SESSION['profile_errors'] ?? [];
+$success_msg = $_SESSION['profile_success'] ?? '';
+unset($_SESSION['profile_errors'], $_SESSION['profile_success']);
+
 // --- PROFILE UPDATES ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $userAccount !== null) {
-    if (isset($_POST['update_pic']) && !empty($_POST['profile_pic'])) {
-        $newPath = ltrim($_POST['profile_pic'], '/');
-        foreach ($profilePicRepository->findAll() as $p) {
-            if (ltrim($p->getPicturePath(), '/') === $newPath) {
-                $userAccount->setIdProfilePic($p->getId());
-                $userAccountRepository->update($userAccount);
-                $_SESSION['profilePicPath'] = ltrim($p->getPicturePath(), '/');
-                break;
-            }
+    // 1. CHANGER PHOTO DE PROFIL
+    if (isset($_POST['update_pic']) && !empty($_POST['newProfilePicId'])) {
+        $newPicId = (int)$_POST['newProfilePicId'];
+        $userAccount->setIdProfilePic($newPicId);
+        $userAccountRepository->update($userAccount);
+        
+        $newPic = $profilePicRepository->findById($newPicId);
+        if ($newPic) $_SESSION['profilePicPath'] = ltrim($newPic->getPicturePath(), '/');
+        
+        $_SESSION['profile_success'] = "Photo de profil mise à jour !";
+        header("Location: profil.php?status=success");
+        exit();
+    }
+
+    // 2. CHANGER PSEUDO
+    if (isset($_POST['update_username']) && isset($_POST['newUsername'])) {
+        $newUsername = trim($_POST['newUsername']);
+        $oldUsername = $userAccount->getUsername();
+
+        if (strlen($newUsername) < 5 || strlen($newUsername) > 30) {
+            $errors[] = "Le pseudo doit faire entre 5 et 30 caractères.";
+        } elseif ($newUsername === $oldUsername) {
+            $errors[] = "Le nouveau pseudo doit être différent de l'actuel.";
+        } elseif ($userAccountRepository->findByUsername($newUsername) !== null) {
+            $errors[] = "Ce pseudo est déjà utilisé.";
         }
-        header("Location: profil.php?status=success");
-        exit();
-    }
 
-    if (isset($_POST['update_username']) && !empty(trim($_POST['username']))) {
-        $newUsername = trim($_POST['username']);
-        $userAccount->setUsername($newUsername);
-        $userAccountRepository->update($userAccount);
-        $_SESSION['username'] = $newUsername;
-        header("Location: profil.php?status=success");
-        exit();
-    }
-
-    if (isset($_POST['update_email']) && !empty(trim($_POST['email']))) {
-        $newEmail = trim($_POST['email']);
-        $userAccount->setEmail($newEmail);
-        $userAccountRepository->update($userAccount);
-        header("Location: profil.php?status=success");
-        exit();
-    }
-
-    if (isset($_POST['update_password']) && !empty($_POST['password']) && !empty($_POST['password_confirm'])) {
-        if ($_POST['password'] === $_POST['password_confirm']) {
-            $userAccount->setPasswordHash(password_hash($_POST['password'], PASSWORD_DEFAULT));
+        if (empty($errors)) {
+            $userAccount->setUsername($newUsername);
             $userAccountRepository->update($userAccount);
+            $_SESSION['username'] = $newUsername;
+            $_SESSION['profile_success'] = "Pseudo modifié avec succès !";
             header("Location: profil.php?status=success");
             exit();
-        } else {
-            header("Location: profil.php?status=error&msg=mismatch");
+        }
+    }
+
+    // 3. CHANGER EMAIL
+    if (isset($_POST['update_email']) && isset($_POST['newEmail'])) {
+        $newEmail = trim($_POST['newEmail']);
+        $oldEmail = $userAccount->getEmail();
+
+        if ($newEmail === $oldEmail) {
+            $errors[] = "Le nouvel email doit être différent de l'actuel.";
+        } elseif (!filter_var($newEmail, FILTER_VALIDATE_EMAIL)) {
+            $errors[] = "L'adresse email n'est pas valide.";
+        } elseif ($userAccountRepository->findByEmail($newEmail) !== null) {
+            $errors[] = "Cet email est déjà utilisé.";
+        }
+
+        if (empty($errors)) {
+            $userAccount->setEmail($newEmail);
+            $userAccountRepository->update($userAccount);
+            $_SESSION['profile_success'] = "Email mis à jour !";
+            header("Location: profil.php?status=success");
             exit();
         }
+    }
+
+    // 4. CHANGER MOT DE PASSE
+    if (isset($_POST['update_password']) && !empty($_POST['newPassword'])) {
+        $newPassword = $_POST['newPassword'];
+        $confirmPassword = $_POST['confirmNewPassword'];
+
+        if (strlen($newPassword) < 8) {
+            $errors[] = "Le mot de passe doit faire au moins 8 caractères.";
+        } elseif ($newPassword !== $confirmPassword) {
+            $errors[] = "Les deux mots de passe ne correspondent pas.";
+        }
+
+        if (empty($errors)) {
+            $userAccount->setPasswordHash(password_hash($newPassword, PASSWORD_DEFAULT));
+            $userAccountRepository->update($userAccount);
+            $_SESSION['profile_success'] = "Mot de passe modifié !";
+            header("Location: profil.php?status=success");
+            exit();
+        }
+    }
+
+    if (!empty($errors)) {
+        $_SESSION['profile_errors'] = $errors;
+        header("Location: profil.php?status=error");
+        exit();
     }
 }
 
@@ -288,16 +334,33 @@ if ($currentUserId !== null) {
             </div>
 
             <!-- Bannière de succès -->
-            <div id="success-banner" class="hidden mx-5 mt-10 p-3 bg-green-100 border-2 border-green-500 rounded-2xl flex items-center gap-3 shadow-md">
+            <div id="success-banner" class="<?php echo $success_msg ? '' : 'hidden'; ?> mx-5 mt-10 p-3 bg-green-100 border-2 border-green-500 rounded-2xl flex items-center gap-3 shadow-md">
                 <div class="bg-green-500 rounded-full p-1 text-white">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                 </div>
-                <p class="text-green-700 font-bold text-sm">Modifications enregistrées !</p>
+                <p class="text-green-700 font-bold text-sm"><?php echo htmlspecialchars($success_msg ?: 'Modifications enregistrées !'); ?></p>
             </div>
 
-            <!-- Bannière d'erreur -->
+            <!-- Encart d'erreurs (Liste à points) -->
+            <?php if (!empty($errors)): ?>
+            <div id="error-banner" class="mx-5 mt-10 p-4 bg-red-100 border-2 border-red-500 rounded-2xl shadow-md">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="bg-red-500 rounded-full p-1 text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </div>
+                    <p class="text-red-700 font-bold text-sm">Erreur(s) :</p>
+                </div>
+                <ul class="list-disc list-inside text-red-600 text-xs font-semibold space-y-1 ml-7">
+                    <?php foreach ($errors as $error): ?>
+                        <li><?php echo htmlspecialchars($error); ?></li>
+                    <?php endforeach; ?>
+                </ul>
+            </div>
+            <?php else: ?>
             <div id="error-banner" class="hidden mx-5 mt-10 p-3 bg-red-100 border-2 border-red-500 rounded-2xl flex items-center gap-3 shadow-md">
                 <div class="bg-red-500 rounded-full p-1 text-white">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
@@ -306,6 +369,7 @@ if ($currentUserId !== null) {
                 </div>
                 <p id="error-banner-text" class="text-red-700 font-bold text-sm">Une erreur est survenue.</p>
             </div>
+            <?php endif; ?>
 
 
             <button type="button" id="close-edit-modal"
@@ -324,21 +388,18 @@ if ($currentUserId !== null) {
                     </p>
                     <div class="flex items-center justify-around gap-2">
                         <?php
-                        $pics = [
-                            ['path' => 'img/profilePics/green_plumbob.png', 'label' => 'Vert'],
-                            ['path' => 'img/profilePics/cyan_plumbob.png', 'label' => 'Cyan'],
-                            ['path' => 'img/profilePics/orange_plumbob.png', 'label' => 'Orange'],
-                            ['path' => 'img/profilePics/red_plumbob.png', 'label' => 'Rouge'],
-                        ];
-                        foreach ($pics as $pic): ?>
+                        $pics = $profilePicRepository->findAll();
+                        foreach ($pics as $pic): 
+                            // On n'affiche pas la photo actuelle
+                            if (ltrim($pic->getPicturePath(), '/') === ltrim($profilePicPath, '/')) continue;
+                        ?>
                             <label class="cursor-pointer flex flex-col items-center gap-1 group">
-                                <input type="radio" name="profile_pic" value="<?php echo htmlspecialchars($pic['path']); ?>"
-                                    class="hidden peer" <?php echo (ltrim($profilePicPath, '/') === ltrim($pic['path'], '/')) ? 'checked' : ''; ?>>
+                                <input type="radio" name="newProfilePicId" value="<?php echo (int)$pic->getId(); ?>"
+                                    class="hidden peer">
                                 <div
                                     class="w-10 h-10 rounded-full border-2 border-transparent peer-checked:border-[#33b842] overflow-hidden shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] transition duration-200 group-hover:scale-105">
-                                    <img src="../<?php echo htmlspecialchars($pic['path']); ?>"
-                                        alt="<?php echo $pic['label']; ?>" class="w-full h-full object-cover"
-                                        onerror="this.onerror=null; this.src='../img/profilePics/green_plumbob.png';">
+                                    <img src="../<?php echo htmlspecialchars(ltrim($pic->getPicturePath(), '/')); ?>"
+                                        alt="Option" class="w-full h-full object-cover">
                                 </div>
                             </label>
                         <?php endforeach; ?>
@@ -356,8 +417,8 @@ if ($currentUserId !== null) {
                     <label for="edit-username"
                         class="block text-[#3769a9] font-bold text-sm border-b-2 border-[#33b842] pb-0.5 w-fit">Nom
                         d'utilisateur</label>
-                    <input type="text" id="edit-username" name="username"
-                        value="<?php echo htmlspecialchars($username); ?>"
+                    <input type="text" id="edit-username" name="newUsername"
+                        placeholder="<?php echo htmlspecialchars($username); ?>"
                         class="w-full px-4 py-1.5 text-sm bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-[#3769a9] font-medium outline-none focus:ring-2 focus:ring-[#3769a9] focus:ring-opacity-50 transition duration-200">
                     <div class="flex justify-end pt-1">
                         <button type="submit" name="update_username"
@@ -372,8 +433,8 @@ if ($currentUserId !== null) {
                     <label for="edit-email"
                         class="block text-[#3769a9] font-bold text-sm border-b-2 border-[#33b842] pb-0.5 w-fit">Adresse
                         e-mail</label>
-                    <input type="email" id="edit-email" name="email"
-                        value="<?php echo htmlspecialchars($userAccount?->getEmail() ?? ''); ?>"
+                    <input type="email" id="edit-email" name="newEmail"
+                        placeholder="<?php echo htmlspecialchars($userAccount?->getEmail() ?? ''); ?>"
                         class="w-full px-4 py-1.5 text-sm bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-[#3769a9] font-medium outline-none focus:ring-2 focus:ring-[#3769a9] focus:ring-opacity-50 transition duration-200">
                     <div class="flex justify-end pt-1">
                         <button type="submit" name="update_email"
@@ -388,7 +449,7 @@ if ($currentUserId !== null) {
                     <p class="text-[#3769a9] font-bold text-sm border-b-2 border-[#33b842] pb-0.5 w-fit">Mot de passe
                     </p>
                     <div class="relative pb-2">
-                        <input type="password" id="edit-password" name="password" placeholder="Nouveau mot de passe"
+                        <input type="password" id="edit-password" name="newPassword" placeholder="Nouveau mot de passe"
                             class="w-full px-4 py-1.5 pr-10 text-sm bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-[#3769a9] font-medium outline-none focus:ring-2 focus:ring-[#3769a9] focus:ring-opacity-50 transition duration-200">
                         <button type="button" id="toggle-edit-password"
                             class="absolute right-3 top-1/2 -translate-y-1/2 text-[#3769a9] hover:text-[#2a5885] transition duration-200"
@@ -408,7 +469,7 @@ if ($currentUserId !== null) {
                         </button>
                     </div>
                     <div class="relative">
-                        <input type="password" id="edit-password-confirm" name="password_confirm"
+                        <input type="password" id="edit-password-confirm" name="confirmNewPassword"
                             placeholder="Confirmer le mot de passe"
                             class="w-full px-4 py-1.5 pr-10 text-sm bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-[#3769a9] font-medium outline-none focus:ring-2 focus:ring-[#3769a9] focus:ring-opacity-50 transition duration-200">
                         <button type="button" id="toggle-edit-password-confirm"
@@ -428,8 +489,6 @@ if ($currentUserId !== null) {
                             </svg>
                         </button>
                     </div>
-                    <p id="password-mismatch-msg" class="text-red-500 text-[10px] font-semibold hidden px-2">Les mots de
-                        passe ne correspondent pas.</p>
                     <div class="flex justify-end pt-1">
                         <button type="submit" name="update_password" id="save-password-btn"
                             class="px-5 py-1 bg-[#3769a9] hover:bg-[#2a5885] text-white text-xs font-bold rounded-full shadow-lg transition duration-200 hover:scale-105">
@@ -480,12 +539,9 @@ if ($currentUserId !== null) {
         document.getElementById('edit-password-form')?.addEventListener('submit', (e) => {
             const pwd = document.getElementById('edit-password').value;
             const confirm = document.getElementById('edit-password-confirm').value;
-            const msg = document.getElementById('password-mismatch-msg');
             if (pwd && confirm && pwd !== confirm) {
                 e.preventDefault();
-                msg.classList.remove('hidden');
-            } else {
-                msg.classList.add('hidden');
+                alert("Les mots de passe ne correspondent pas.");
             }
         });
 
