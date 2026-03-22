@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $userAccount !== null) {
                 break;
             }
         }
-        header("Location: profil.php");
+        header("Location: profil.php?status=success");
         exit();
     }
 
@@ -49,7 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $userAccount !== null) {
         $userAccount->setUsername($newUsername);
         $userAccountRepository->update($userAccount);
         $_SESSION['username'] = $newUsername;
-        header("Location: profil.php");
+        header("Location: profil.php?status=success");
         exit();
     }
 
@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $userAccount !== null) {
         $newEmail = trim($_POST['email']);
         $userAccount->setEmail($newEmail);
         $userAccountRepository->update($userAccount);
-        header("Location: profil.php");
+        header("Location: profil.php?status=success");
         exit();
     }
 
@@ -65,7 +65,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $userAccount !== null) {
         if ($_POST['password'] === $_POST['password_confirm']) {
             $userAccount->setPasswordHash(password_hash($_POST['password'], PASSWORD_DEFAULT));
             $userAccountRepository->update($userAccount);
-            header("Location: profil.php");
+            header("Location: profil.php?status=success");
+            exit();
+        } else {
+            header("Location: profil.php?status=error&msg=mismatch");
             exit();
         }
     }
@@ -284,6 +287,27 @@ if ($currentUserId !== null) {
                 </span>
             </div>
 
+            <!-- Bannière de succès -->
+            <div id="success-banner" class="hidden mx-5 mt-10 p-3 bg-green-100 border-2 border-green-500 rounded-2xl flex items-center gap-3 shadow-md">
+                <div class="bg-green-500 rounded-full p-1 text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                </div>
+                <p class="text-green-700 font-bold text-sm">Modifications enregistrées !</p>
+            </div>
+
+            <!-- Bannière d'erreur -->
+            <div id="error-banner" class="hidden mx-5 mt-10 p-3 bg-red-100 border-2 border-red-500 rounded-2xl flex items-center gap-3 shadow-md">
+                <div class="bg-red-500 rounded-full p-1 text-white">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </div>
+                <p id="error-banner-text" class="text-red-700 font-bold text-sm">Une erreur est survenue.</p>
+            </div>
+
+
             <button type="button" id="close-edit-modal"
                 class="absolute top-3 right-4 w-8 h-8 bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] flex items-center justify-center text-[#3769a9] hover:ring-2 hover:ring-[#3769a9] hover:ring-opacity-50 transition duration-200">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
@@ -294,7 +318,8 @@ if ($currentUserId !== null) {
 
             <div class="pt-8 px-5 pb-5 space-y-2.5">
 
-                <form method="POST" class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1.5">
+                <form method="POST"
+                    class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1.5">
                     <p class="text-[#3769a9] font-bold text-sm border-b-2 border-[#33b842] pb-0.5 w-fit">Photo de profil
                     </p>
                     <div class="flex items-center justify-around gap-2">
@@ -326,7 +351,8 @@ if ($currentUserId !== null) {
                     </div>
                 </form>
 
-                <form method="POST" class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1">
+                <form method="POST"
+                    class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1">
                     <label for="edit-username"
                         class="block text-[#3769a9] font-bold text-sm border-b-2 border-[#33b842] pb-0.5 w-fit">Nom
                         d'utilisateur</label>
@@ -341,7 +367,8 @@ if ($currentUserId !== null) {
                     </div>
                 </form>
 
-                <form method="POST" class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1">
+                <form method="POST"
+                    class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1">
                     <label for="edit-email"
                         class="block text-[#3769a9] font-bold text-sm border-b-2 border-[#33b842] pb-0.5 w-fit">Adresse
                         e-mail</label>
@@ -356,7 +383,8 @@ if ($currentUserId !== null) {
                     </div>
                 </form>
 
-                <form method="POST" id="edit-password-form" class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1">
+                <form method="POST" id="edit-password-form"
+                    class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1">
                     <p class="text-[#3769a9] font-bold text-sm border-b-2 border-[#33b842] pb-0.5 w-fit">Mot de passe
                     </p>
                     <div class="relative pb-2">
@@ -453,13 +481,57 @@ if ($currentUserId !== null) {
             const pwd = document.getElementById('edit-password').value;
             const confirm = document.getElementById('edit-password-confirm').value;
             const msg = document.getElementById('password-mismatch-msg');
-            if (pwd !== confirm) {
+            if (pwd && confirm && pwd !== confirm) {
                 e.preventDefault();
                 msg.classList.remove('hidden');
             } else {
                 msg.classList.add('hidden');
             }
         });
+
+        // Gestion automatique des messages de statut (Succès / Erreur)
+        const urlParams = new URLSearchParams(window.location.search);
+        const status = urlParams.get('status');
+        
+        if (status) {
+            // Dans tous les cas on rouvre la pop-up
+            overlay.classList.remove('hidden');
+            
+            if (status === 'success') {
+                const banner = document.getElementById('success-banner');
+                if (banner) banner.classList.remove('hidden');
+            } else if (status === 'error') {
+                const banner = document.getElementById('error-banner');
+                const bannerText = document.getElementById('error-banner-text');
+                if (banner) banner.classList.remove('hidden');
+                
+                // Message d'erreur spécifique si besoin
+                if (urlParams.get('msg') === 'mismatch') {
+                    bannerText.innerText = "Les mots de passe ne correspondent pas.";
+                }
+            }
+            
+            // Nettoyer l'URL proprement sans recharger
+            window.history.replaceState({}, document.title, window.location.pathname);
+            
+            // On cache les bannières après 5 sec si elles sont visibles
+            setTimeout(() => {
+                const successBanner = document.getElementById('success-banner');
+                const errorBanner = document.getElementById('error-banner');
+                
+                const activeBanner = (successBanner && !successBanner.classList.contains('hidden')) 
+                    ? successBanner 
+                    : (!errorBanner.classList.contains('hidden') ? errorBanner : null);
+                
+                if (activeBanner) {
+                    activeBanner.classList.add('transition-opacity', 'duration-500', 'opacity-0');
+                    setTimeout(() => {
+                        activeBanner.classList.add('hidden');
+                        activeBanner.classList.remove('opacity-0');
+                    }, 500);
+                }
+            }, 5000);
+        }
     </script>
 </body>
 
