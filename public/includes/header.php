@@ -7,8 +7,8 @@ require_once dirname(__DIR__, 2) . '/src/Security/AuthMiddleware.php';
 $showAdminButton = $showAdminButton ?? AuthMiddleware::is_admin($_SESSION);
 $searchPlaceholder = $searchPlaceholder ?? 'Recherche :';
 
-$username = $_SESSION['username'] ?? '';
-$profilePicPath = $_SESSION['profilePicPath'] ?? 'img/profilePics/green_plumbob.png';
+$headerUsername = $_SESSION['username'] ?? 'Invité';
+$headerProfilePicPath = $_SESSION['profilePicPath'] ?? 'img/profilePics/green_plumbob.png';
 ?>
 
 <div id="navbar"
@@ -46,16 +46,16 @@ $profilePicPath = $_SESSION['profilePicPath'] ?? 'img/profilePics/green_plumbob.
 
             <?php if ($showProfilePic): ?>
                 <!-- Photo de profil de l'utilisateur connecté -->
-                <a href="<?php echo $basePath; ?>views/profil.php" title="<?php echo htmlspecialchars($username); ?>">
-                    <img src="<?php echo $basePath . htmlspecialchars($profilePicPath); ?>"
+                <a href="<?php echo $basePath; ?>views/profil.php" title="<?php echo htmlspecialchars($headerUsername); ?>">
+                    <img src="<?php echo $basePath . htmlspecialchars($headerProfilePicPath); ?>"
                         class="absolute w-16 h-16 object-cover transform -top-6 bg-[#2a5885] border-4 border-[#33b842] rounded-full hover:scale-110 transition-transform"
-                        alt="Photo de profil de <?php echo htmlspecialchars($username); ?>"
+                        alt="Photo de profil de <?php echo htmlspecialchars($headerUsername); ?>"
                         onerror="this.onerror=null; this.src='<?php echo $basePath; ?>img/profilePics/green_plumbob.png';">
                 </a>
             <?php else: ?>
                 <!-- Logo plumbob par défaut -->
                 <a href="<?php echo $basePath; ?>index.php">
-                    <img src="<?php echo $basePath . $profilePicPath ?>"
+                    <img src="<?php echo $basePath . $headerProfilePicPath ?>"
                         class="absolute w-16 h-16 object-cover transform -top-6 bg-[#2a5885] border-4 border-[#33b842] rounded-full hover:scale-110 transition-transform"
                         alt="logo" title="The Sims Den"
                         onerror="this.onerror=null; this.src='<?php echo $basePath; ?>img/profilePics/green_plumbob.png';">

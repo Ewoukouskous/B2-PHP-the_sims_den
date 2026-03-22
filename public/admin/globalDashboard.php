@@ -333,8 +333,8 @@ $canEditSelectedUserRole = $canDeleteSelectedUser;
                             <p class="text-[#3769a9] font-bold text-center py-8">Aucun utilisateur</p>
                         <?php else: ?>
                             <?php foreach ($userRows as $userRow): ?>
-                                <a href="globalDashboard.php?tab=users&selectedUser=<?php echo $userRow['id']; ?>"
-                                   class="grid grid-cols-[1.45fr_1fr_1.2fr_48px] items-center min-h-[60px] rounded-full px-4 py-2 border-2 bg-[#F0EEE9] shadow-[0px_4px_0px_1px_rgba(158,158,158,1)] transition duration-200 hover:bg-white hover:-translate-y-[1px] <?php echo $selectedUser !== null && $selectedUser['id'] === $userRow['id'] ? 'border-[#33b842] ring-2 ring-[#33b842]/20' : 'border-transparent'; ?>">
+                                <div onclick="window.location.href='globalDashboard.php?tab=users&selectedUser=<?php echo $userRow['id']; ?>'"
+                                    class="grid grid-cols-[1.45fr_1fr_1.2fr_48px] items-center min-h-[60px] cursor-pointer rounded-full px-4 py-2 border-2 bg-[#F0EEE9] shadow-[0px_4px_0px_1px_rgba(158,158,158,1)] transition duration-200 hover:bg-white hover:-translate-y-[1px] <?php echo $selectedUser !== null && $selectedUser['id'] === $userRow['id'] ? 'border-[#33b842] ring-2 ring-[#33b842]/20' : 'border-transparent'; ?>">
                                     <span class="text-[#3769a9] font-bold text-[1.55rem] leading-none md:text-[1.45rem] lg:text-[1.5rem]">
                                         <?php echo htmlspecialchars($userRow['username']); ?>
                                     </span>
@@ -345,14 +345,17 @@ $canEditSelectedUserRole = $canDeleteSelectedUser;
                                         <?php echo htmlspecialchars(formatShortDate($userRow['lastLogin'])); ?>
                                     </span>
                                     <span class="flex justify-end">
-                                        <span class="w-9 h-9 rounded-full bg-white border border-[#cfcfcf] shadow-[0px_2px_0px_1px_rgba(158,158,158,1)] flex items-center justify-center text-[#3769a9] transition duration-200 hover:scale-105 hover:bg-[#ecf4ff]">
+                                        <a href="../views/profil.php?id=<?php echo $userRow['id']; ?>" 
+                                            onclick="event.stopPropagation();"
+                                            class="w-9 h-9 rounded-full bg-white border border-[#cfcfcf] shadow-[0px_2px_0px_1px_rgba(158,158,158,1)] flex items-center justify-center text-[#3769a9] transition duration-200 hover:scale-105 hover:bg-[#ecf4ff] cursor-pointer"
+                                            title="Voir le profil">
                                             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                                                 <path d="M2 12C3.9 7.8 7.6 5 12 5C16.4 5 20.1 7.8 22 12C20.1 16.2 16.4 19 12 19C7.6 19 3.9 16.2 2 12Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
                                                 <circle cx="12" cy="12" r="3.2" stroke="currentColor" stroke-width="1.8"/>
                                             </svg>
-                                        </span>
+                                        </a>
                                     </span>
-                                </a>
+                                </div>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </div>

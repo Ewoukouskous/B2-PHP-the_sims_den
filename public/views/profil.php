@@ -20,20 +20,29 @@ require_once $root_path . '/src/Enum/UserRole.php';
 $isConnected = AuthMiddleware::is_connected($_SESSION);
 $currentUserId = ($isConnected && isset($_SESSION['userId']) && is_numeric($_SESSION['userId'])) ? (int) $_SESSION['userId'] : null;
 
+// On regarde si un ID est passé en paramètre
+$targetUserId = null;
+if (isset($_GET['id']) && is_numeric($_GET['id'])) {
+    $targetUserId = (int)$_GET['id'];
+} else {
+    $targetUserId = $currentUserId;
+}
+
 $userAccountRepository = new UserAccountRepository();
 $profilePicRepository = new ProfilePicRepository();
 $userFavoriteRepository = new UserFavoriteRepository();
 $gameRepository = new GameRepository();
 $userAchievementRepository = new UserAchievementRepository();
 
-$userAccount = $currentUserId !== null ? $userAccountRepository->findById($currentUserId) : null;
+$userAccount = $targetUserId !== null ? $userAccountRepository->findById($targetUserId) : null;
+$isOwnProfile = ($isConnected && $targetUserId === $currentUserId);
 
 $errors = $_SESSION['profile_errors'] ?? [];
 $success_msg = $_SESSION['profile_success'] ?? '';
 unset($_SESSION['profile_errors'], $_SESSION['profile_success']);
 
-// --- PROFILE UPDATES ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && $userAccount !== null) {
+// --- PROFILE UPDATES --- (Seulement si c'est notre propre profil)
+if ($isOwnProfile && $_SERVER['REQUEST_METHOD'] === 'POST' && $userAccount !== null) {
     // 1. CHANGER PHOTO DE PROFIL
     if (isset($_POST['update_pic']) && !empty($_POST['newProfilePicId'])) {
         $newPicId = (int)$_POST['newProfilePicId'];
@@ -133,8 +142,8 @@ if ($userAccount !== null) {
 
 $favoriteGames = [];
 $favoritesCount = 0;
-if ($currentUserId !== null) {
-    foreach ($userFavoriteRepository->findAllByUserId($currentUserId) as $userFavorite) {
+if ($targetUserId !== null) {
+    foreach ($userFavoriteRepository->findAllByUserId($targetUserId) as $userFavorite) {
         $game = $gameRepository->findById($userFavorite->getIdGame());
         if ($game === null) {
             continue;
@@ -159,8 +168,8 @@ if ($currentUserId !== null) {
 $favoriteGames = array_slice($favoriteGames, 0, 4);
 
 $achievementsCount = 0;
-if ($currentUserId !== null) {
-    $achievementsCount = count($userAchievementRepository->findAchievedByUserId($currentUserId));
+if ($targetUserId !== null) {
+    $achievementsCount = count($userAchievementRepository->findAchievedByUserId($targetUserId));
 }
 ?>
 
@@ -194,6 +203,7 @@ if ($currentUserId !== null) {
             <div
                 class="relative bg-[#F0EEE9] bg-opacity-90 rounded-[1.8rem] shadow-[0px_8px_0px_0px_rgba(51,184,66,0.9)] p-6 flex flex-col gap-4">
 
+                <?php if ($isOwnProfile): ?>
                 <button type="button" title="Modifier le profil"
                     class="absolute top-4 right-4 w-10 h-10 bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] flex items-center justify-center text-[#3769a9] hover:ring-2 hover:ring-[#3769a9] hover:ring-opacity-50 transition duration-200 ease-in-out">
                     <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
@@ -202,6 +212,7 @@ if ($currentUserId !== null) {
                             d="M16.862 3.487a2.25 2.25 0 113.182 3.182L7.5 19.213l-4.5 1 1-4.5L16.862 3.487z" />
                     </svg>
                 </button>
+                <?php endif; ?>
 
                 <div class="grid grid-cols-[1fr_auto_1fr] gap-6 items-start">
 
@@ -320,6 +331,7 @@ if ($currentUserId !== null) {
 
     </div>
 
+    <?php if ($isOwnProfile): ?>
     <div id="edit-modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center hidden"
         style="background: rgba(30, 50, 90, 0.55); backdrop-filter: blur(4px);">
 
@@ -589,6 +601,7 @@ if ($currentUserId !== null) {
             }, 5000);
         }
     </script>
+    <?php endif; ?>
 </body>
 
 </html>
