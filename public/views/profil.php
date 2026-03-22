@@ -14,16 +14,17 @@ require_once $root_path . '/src/Repository/ProfilePicRepository.php';
 require_once $root_path . '/src/Repository/UserFavoriteRepository.php';
 require_once $root_path . '/src/Repository/GameRepository.php';
 require_once $root_path . '/src/Repository/UserAchievementRepository.php';
+require_once $root_path . '/src/Repository/AchievementRepository.php';
 require_once $root_path . '/src/Enum/GameType.php';
 require_once $root_path . '/src/Enum/UserRole.php';
 
-$isConnected = AuthMiddleware::is_connected($_SESSION);
+$isConnected = AuthMiddleware::is_connected();
 $currentUserId = ($isConnected && isset($_SESSION['userId']) && is_numeric($_SESSION['userId'])) ? (int) $_SESSION['userId'] : null;
 
 // On regarde si un ID est passé en paramètre
 $targetUserId = null;
 if (isset($_GET['id']) && is_numeric($_GET['id'])) {
-    $targetUserId = (int)$_GET['id'];
+    $targetUserId = (int) $_GET['id'];
 } else {
     $targetUserId = $currentUserId;
 }
@@ -33,6 +34,7 @@ $profilePicRepository = new ProfilePicRepository();
 $userFavoriteRepository = new UserFavoriteRepository();
 $gameRepository = new GameRepository();
 $userAchievementRepository = new UserAchievementRepository();
+$achievementRepository = new AchievementRepository();
 
 $userAccount = $targetUserId !== null ? $userAccountRepository->findById($targetUserId) : null;
 $isOwnProfile = ($isConnected && $targetUserId === $currentUserId);
@@ -45,13 +47,14 @@ unset($_SESSION['profile_errors'], $_SESSION['profile_success']);
 if ($isOwnProfile && $_SERVER['REQUEST_METHOD'] === 'POST' && $userAccount !== null) {
     // 1. CHANGER PHOTO DE PROFIL
     if (isset($_POST['update_pic']) && !empty($_POST['newProfilePicId'])) {
-        $newPicId = (int)$_POST['newProfilePicId'];
+        $newPicId = (int) $_POST['newProfilePicId'];
         $userAccount->setIdProfilePic($newPicId);
         $userAccountRepository->update($userAccount);
-        
+
         $newPic = $profilePicRepository->findById($newPicId);
-        if ($newPic) $_SESSION['profilePicPath'] = ltrim($newPic->getPicturePath(), '/');
-        
+        if ($newPic)
+            $_SESSION['profilePicPath'] = ltrim($newPic->getPicturePath(), '/');
+
         $_SESSION['profile_success'] = "Photo de profil mise à jour !";
         header("Location: profil.php?status=success");
         exit();
@@ -167,9 +170,15 @@ if ($targetUserId !== null) {
 
 $favoriteGames = array_slice($favoriteGames, 0, 4);
 
+$achievements = [];
 $achievementsCount = 0;
 if ($targetUserId !== null) {
-    $achievementsCount = count($userAchievementRepository->findAchievedByUserId($targetUserId));
+    $achievements = $achievementRepository->findAllWithUserProgress($targetUserId);
+    foreach ($achievements as $achievement) {
+        if ($achievement->getUnlockedAt() !== null) {
+            $achievementsCount++;
+        }
+    }
 }
 ?>
 
@@ -198,20 +207,20 @@ if ($targetUserId !== null) {
         include '../includes/header.php';
         ?>
 
-        <div class="absolute top-36 w-full max-w-7xl px-4">
+        <div class="absolute top-30 w-full max-w-7xl px-4">
 
             <div
                 class="relative bg-[#F0EEE9] bg-opacity-90 rounded-[1.8rem] shadow-[0px_8px_0px_0px_rgba(51,184,66,0.9)] p-6 flex flex-col gap-4">
 
                 <?php if ($isOwnProfile): ?>
-                <button type="button" title="Modifier le profil"
-                    class="absolute top-4 right-4 w-10 h-10 bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] flex items-center justify-center text-[#3769a9] hover:ring-2 hover:ring-[#3769a9] hover:ring-opacity-50 transition duration-200 ease-in-out">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M16.862 3.487a2.25 2.25 0 113.182 3.182L7.5 19.213l-4.5 1 1-4.5L16.862 3.487z" />
-                    </svg>
-                </button>
+                    <button type="button" title="Modifier le profil"
+                        class="absolute top-4 right-4 w-10 h-10 bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] flex items-center justify-center text-[#3769a9] hover:ring-2 hover:ring-[#3769a9] hover:ring-opacity-50 transition duration-200 ease-in-out">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M16.862 3.487a2.25 2.25 0 113.182 3.182L7.5 19.213l-4.5 1 1-4.5L16.862 3.487z" />
+                        </svg>
+                    </button>
                 <?php endif; ?>
 
                 <div class="grid grid-cols-[1fr_auto_1fr] gap-6 items-start">
@@ -222,16 +231,32 @@ if ($targetUserId !== null) {
                             Succès :
                         </h2>
                         <div class="grid grid-cols-5 gap-2">
-                            <?php for ($i = 0; $i < 10; $i++): ?>
-                                <div
-                                    class="w-12 h-12 rounded-full bg-[#3769a9] bg-opacity-20 border-2 border-[#3769a9] border-opacity-20 flex items-center justify-center">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-[#3769a9] opacity-30"
-                                        fill="currentColor" viewBox="0 0 24 24">
-                                        <path
-                                            d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                                    </svg>
-                                </div>
-                            <?php endfor; ?>
+                            <?php if (empty($achievements)): ?>
+                                <p class="text-[#3769a9] text-[10px] opacity-50 italic">Aucun succès débloqué.</p>
+                            <?php else: ?>
+                                <?php foreach ($achievements as $achievement): ?>
+                                    <div class="group relative w-12 h-12 rounded-full border-2 border-[#3769a9] border-opacity-20 flex items-center justify-center transition-transform hover:scale-110 <?php echo $achievement->getUnlockedAt() ? 'bg-[#33b842] bg-opacity-20 border-[#33b842]' : 'bg-[#3769a9] bg-opacity-5'; ?>">
+
+                                        <img src="../<?php echo htmlspecialchars(ltrim($achievement->getIconPath(), '/')); ?>"
+                                            alt="Icon"
+                                            class="w-7 h-7 object-contain <?php echo $achievement->getUnlockedAt() ? '' : 'grayscale opacity-40'; ?>">
+
+                                        <!-- Tooltip personnalisé -->
+                                        <div
+                                            class="hidden group-hover:flex flex-col absolute -top-16 left-1/2 -translate-x-1/2 bg-[#3769a9] text-white text-[10px] px-3 py-2 rounded-xl shadow-xl whitespace-nowrap z-50 pointer-events-none border border-white/20">
+                                            <span class="font-bold underline mb-0.5"><?php echo htmlspecialchars($achievement->getAchievementName()); ?></span>
+                                            <span class="opacity-90 italic"><?php echo htmlspecialchars($achievement->getAchievementDesc()); ?></span>
+                                            <?php if ($achievement->getUnlockedAt()): ?>
+                                                <span class="mt-1.5 text-[9px] text-[#33b842] font-bold">Débloqué le : <?php echo $achievement->getUnlockedAt()->format('d/m/Y'); ?></span>
+                                            <?php else: ?>
+                                                <span class="mt-1.5 text-[9px] text-gray-300 font-bold uppercase tracking-wider">Verrouillé</span>
+                                            <?php endif; ?>
+                                            <!-- Petite pointe du tooltip -->
+                                            <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#3769a9] rotate-45 border-r border-b border-white/10"></div>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
                         </div>
                     </div>
 
@@ -322,285 +347,293 @@ if ($targetUserId !== null) {
                             </div>
                         <?php endfor; ?>
                     </div>
-
                 </div>
 
             </div>
 
         </div>
+
+    </div>
 
     </div>
 
     <?php if ($isOwnProfile): ?>
-    <div id="edit-modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center hidden"
-        style="background: rgba(30, 50, 90, 0.55); backdrop-filter: blur(4px);">
+        <div id="edit-modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center hidden"
+            style="background: rgba(30, 50, 90, 0.55); backdrop-filter: blur(4px);">
 
-        <div
-            class="relative bg-[#F0EEE9] bg-opacity-98 rounded-[2rem] shadow-[0px_8px_0px_0px_rgba(51,184,66,0.9)] w-full max-w-lg mx-4 mt-8">
+            <div
+                class="relative bg-[#F0EEE9] bg-opacity-98 rounded-[2rem] shadow-[0px_8px_0px_0px_rgba(51,184,66,0.9)] w-full max-w-lg mx-4 mt-8">
 
-            <div class="absolute -top-6 left-1/2 -translate-x-1/2 z-10">
-                <span
-                    class="text-2xl font-bold text-[#3769a9] bg-[#F0EEE9] inline-block px-10 py-2 rounded-full shadow-[0px_2px_0px_1.5px_rgba(51,184,66,1)] whitespace-nowrap">
-                    Modifier le profil
-                </span>
-            </div>
-
-            <!-- Bannière de succès -->
-            <div id="success-banner" class="<?php echo $success_msg ? '' : 'hidden'; ?> mx-5 mt-10 p-3 bg-green-100 border-2 border-green-500 rounded-2xl flex items-center gap-3 shadow-md">
-                <div class="bg-green-500 rounded-full p-1 text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
+                <div class="absolute -top-6 left-1/2 -translate-x-1/2 z-10">
+                    <span
+                        class="text-2xl font-bold text-[#3769a9] bg-[#F0EEE9] inline-block px-10 py-2 rounded-full shadow-[0px_2px_0px_1.5px_rgba(51,184,66,1)] whitespace-nowrap">
+                        Modifier le profil
+                    </span>
                 </div>
-                <p class="text-green-700 font-bold text-sm"><?php echo htmlspecialchars($success_msg ?: 'Modifications enregistrées !'); ?></p>
-            </div>
 
-            <!-- Encart d'erreurs (Liste à points) -->
-            <?php if (!empty($errors)): ?>
-            <div id="error-banner" class="mx-5 mt-10 p-4 bg-red-100 border-2 border-red-500 rounded-2xl shadow-md">
-                <div class="flex items-center gap-3 mb-2">
-                    <div class="bg-red-500 rounded-full p-1 text-white">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                <!-- Bannière de succès -->
+                <div id="success-banner"
+                    class="<?php echo $success_msg ? '' : 'hidden'; ?> mx-5 mt-10 p-3 bg-green-100 border-2 border-green-500 rounded-2xl flex items-center gap-3 shadow-md">
+                    <div class="bg-green-500 rounded-full p-1 text-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" stroke-width="3">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
-                    <p class="text-red-700 font-bold text-sm">Erreur(s) :</p>
+                    <p class="text-green-700 font-bold text-sm">
+                        <?php echo htmlspecialchars($success_msg ?: 'Modifications enregistrées !'); ?></p>
                 </div>
-                <ul class="list-disc list-inside text-red-600 text-xs font-semibold space-y-1 ml-7">
-                    <?php foreach ($errors as $error): ?>
-                        <li><?php echo htmlspecialchars($error); ?></li>
-                    <?php endforeach; ?>
-                </ul>
-            </div>
-            <?php else: ?>
-            <div id="error-banner" class="hidden mx-5 mt-10 p-3 bg-red-100 border-2 border-red-500 rounded-2xl flex items-center gap-3 shadow-md">
-                <div class="bg-red-500 rounded-full p-1 text-white">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+
+                <!-- Encart d'erreurs (Liste à points) -->
+                <?php if (!empty($errors)): ?>
+                    <div id="error-banner" class="mx-5 mt-10 p-4 bg-red-100 border-2 border-red-500 rounded-2xl shadow-md">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="bg-red-500 rounded-full p-1 text-white">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                                    stroke="currentColor" stroke-width="3">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </div>
+                            <p class="text-red-700 font-bold text-sm">Erreur(s) :</p>
+                        </div>
+                        <ul class="list-disc list-inside text-red-600 text-xs font-semibold space-y-1 ml-7">
+                            <?php foreach ($errors as $error): ?>
+                                <li><?php echo htmlspecialchars($error); ?></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </div>
+                <?php else: ?>
+                    <div id="error-banner"
+                        class="hidden mx-5 mt-10 p-3 bg-red-100 border-2 border-red-500 rounded-2xl flex items-center gap-3 shadow-md">
+                        <div class="bg-red-500 rounded-full p-1 text-white">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                                stroke="currentColor" stroke-width="3">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </div>
+                        <p id="error-banner-text" class="text-red-700 font-bold text-sm">Une erreur est survenue.</p>
+                    </div>
+                <?php endif; ?>
+
+
+                <button type="button" id="close-edit-modal"
+                    class="absolute top-3 right-4 w-8 h-8 bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] flex items-center justify-center text-[#3769a9] hover:ring-2 hover:ring-[#3769a9] hover:ring-opacity-50 transition duration-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                     </svg>
+                </button>
+
+                <div class="pt-8 px-5 pb-5 space-y-2.5">
+
+                    <form method="POST"
+                        class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1.5">
+                        <p class="text-[#3769a9] font-bold text-sm border-b-2 border-[#33b842] pb-0.5 w-fit">Photo de profil
+                        </p>
+                        <div class="flex items-center justify-around gap-2">
+                            <?php
+                            $pics = $profilePicRepository->findAll();
+                            foreach ($pics as $pic):
+                                // On n'affiche pas la photo actuelle
+                                if (ltrim($pic->getPicturePath(), '/') === ltrim($profilePicPath, '/'))
+                                    continue;
+                                ?>
+                                <label class="cursor-pointer flex flex-col items-center gap-1 group">
+                                    <input type="radio" name="newProfilePicId" value="<?php echo (int) $pic->getId(); ?>"
+                                        class="hidden peer">
+                                    <div
+                                        class="w-10 h-10 rounded-full border-2 border-transparent peer-checked:border-[#33b842] overflow-hidden shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] transition duration-200 group-hover:scale-105">
+                                        <img src="../<?php echo htmlspecialchars(ltrim($pic->getPicturePath(), '/')); ?>"
+                                            alt="Option" class="w-full h-full object-cover">
+                                    </div>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                        <div class="flex justify-end mt-1">
+                            <button type="submit" name="update_pic"
+                                class="px-5 py-1 bg-[#3769a9] hover:bg-[#2a5885] text-white text-xs font-bold rounded-full shadow-lg transition duration-200 hover:scale-105">
+                                Enregistrer
+                            </button>
+                        </div>
+                    </form>
+
+                    <form method="POST"
+                        class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1">
+                        <label for="edit-username"
+                            class="block text-[#3769a9] font-bold text-sm border-b-2 border-[#33b842] pb-0.5 w-fit">Nom
+                            d'utilisateur</label>
+                        <input type="text" id="edit-username" name="newUsername"
+                            placeholder="<?php echo htmlspecialchars($username); ?>"
+                            class="w-full px-4 py-1.5 text-sm bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-[#3769a9] font-medium outline-none focus:ring-2 focus:ring-[#3769a9] focus:ring-opacity-50 transition duration-200">
+                        <div class="flex justify-end pt-1">
+                            <button type="submit" name="update_username"
+                                class="px-5 py-1 bg-[#3769a9] hover:bg-[#2a5885] text-white text-xs font-bold rounded-full shadow-lg transition duration-200 hover:scale-105">
+                                Enregistrer
+                            </button>
+                        </div>
+                    </form>
+
+                    <form method="POST"
+                        class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1">
+                        <label for="edit-email"
+                            class="block text-[#3769a9] font-bold text-sm border-b-2 border-[#33b842] pb-0.5 w-fit">Adresse
+                            e-mail</label>
+                        <input type="email" id="edit-email" name="newEmail"
+                            placeholder="<?php echo htmlspecialchars($userAccount?->getEmail() ?? ''); ?>"
+                            class="w-full px-4 py-1.5 text-sm bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-[#3769a9] font-medium outline-none focus:ring-2 focus:ring-[#3769a9] focus:ring-opacity-50 transition duration-200">
+                        <div class="flex justify-end pt-1">
+                            <button type="submit" name="update_email"
+                                class="px-5 py-1 bg-[#3769a9] hover:bg-[#2a5885] text-white text-xs font-bold rounded-full shadow-lg transition duration-200 hover:scale-105">
+                                Enregistrer
+                            </button>
+                        </div>
+                    </form>
+
+                    <form method="POST" id="edit-password-form"
+                        class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1">
+                        <p class="text-[#3769a9] font-bold text-sm border-b-2 border-[#33b842] pb-0.5 w-fit">Mot de passe
+                        </p>
+                        <div class="relative pb-2">
+                            <input type="password" id="edit-password" name="newPassword" placeholder="Nouveau mot de passe"
+                                class="w-full px-4 py-1.5 pr-10 text-sm bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-[#3769a9] font-medium outline-none focus:ring-2 focus:ring-[#3769a9] focus:ring-opacity-50 transition duration-200">
+                            <button type="button" id="toggle-edit-password"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-[#3769a9] hover:text-[#2a5885] transition duration-200"
+                                aria-label="Afficher/Masquer">
+                                <svg id="eye-edit" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                <svg id="eye-slash-edit" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 hidden"
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="relative">
+                            <input type="password" id="edit-password-confirm" name="confirmNewPassword"
+                                placeholder="Confirmer le mot de passe"
+                                class="w-full px-4 py-1.5 pr-10 text-sm bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-[#3769a9] font-medium outline-none focus:ring-2 focus:ring-[#3769a9] focus:ring-opacity-50 transition duration-200">
+                            <button type="button" id="toggle-edit-password-confirm"
+                                class="absolute right-3 top-1/2 -translate-y-1/2 text-[#3769a9] hover:text-[#2a5885] transition duration-200"
+                                aria-label="Afficher/Masquer">
+                                <svg id="eye-edit-confirm" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
+                                    viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                <svg id="eye-slash-edit-confirm" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 hidden"
+                                    fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="flex justify-end pt-1">
+                            <button type="submit" name="update_password" id="save-password-btn"
+                                class="px-5 py-1 bg-[#3769a9] hover:bg-[#2a5885] text-white text-xs font-bold rounded-full shadow-lg transition duration-200 hover:scale-105">
+                                Enregistrer
+                            </button>
+                        </div>
+                    </form>
+
                 </div>
-                <p id="error-banner-text" class="text-red-700 font-bold text-sm">Une erreur est survenue.</p>
-            </div>
-            <?php endif; ?>
-
-
-            <button type="button" id="close-edit-modal"
-                class="absolute top-3 right-4 w-8 h-8 bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] flex items-center justify-center text-[#3769a9] hover:ring-2 hover:ring-[#3769a9] hover:ring-opacity-50 transition duration-200">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
-
-            <div class="pt-8 px-5 pb-5 space-y-2.5">
-
-                <form method="POST"
-                    class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1.5">
-                    <p class="text-[#3769a9] font-bold text-sm border-b-2 border-[#33b842] pb-0.5 w-fit">Photo de profil
-                    </p>
-                    <div class="flex items-center justify-around gap-2">
-                        <?php
-                        $pics = $profilePicRepository->findAll();
-                        foreach ($pics as $pic): 
-                            // On n'affiche pas la photo actuelle
-                            if (ltrim($pic->getPicturePath(), '/') === ltrim($profilePicPath, '/')) continue;
-                        ?>
-                            <label class="cursor-pointer flex flex-col items-center gap-1 group">
-                                <input type="radio" name="newProfilePicId" value="<?php echo (int)$pic->getId(); ?>"
-                                    class="hidden peer">
-                                <div
-                                    class="w-10 h-10 rounded-full border-2 border-transparent peer-checked:border-[#33b842] overflow-hidden shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] transition duration-200 group-hover:scale-105">
-                                    <img src="../<?php echo htmlspecialchars(ltrim($pic->getPicturePath(), '/')); ?>"
-                                        alt="Option" class="w-full h-full object-cover">
-                                </div>
-                            </label>
-                        <?php endforeach; ?>
-                    </div>
-                    <div class="flex justify-end mt-1">
-                        <button type="submit" name="update_pic"
-                            class="px-5 py-1 bg-[#3769a9] hover:bg-[#2a5885] text-white text-xs font-bold rounded-full shadow-lg transition duration-200 hover:scale-105">
-                            Enregistrer
-                        </button>
-                    </div>
-                </form>
-
-                <form method="POST"
-                    class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1">
-                    <label for="edit-username"
-                        class="block text-[#3769a9] font-bold text-sm border-b-2 border-[#33b842] pb-0.5 w-fit">Nom
-                        d'utilisateur</label>
-                    <input type="text" id="edit-username" name="newUsername"
-                        placeholder="<?php echo htmlspecialchars($username); ?>"
-                        class="w-full px-4 py-1.5 text-sm bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-[#3769a9] font-medium outline-none focus:ring-2 focus:ring-[#3769a9] focus:ring-opacity-50 transition duration-200">
-                    <div class="flex justify-end pt-1">
-                        <button type="submit" name="update_username"
-                            class="px-5 py-1 bg-[#3769a9] hover:bg-[#2a5885] text-white text-xs font-bold rounded-full shadow-lg transition duration-200 hover:scale-105">
-                            Enregistrer
-                        </button>
-                    </div>
-                </form>
-
-                <form method="POST"
-                    class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1">
-                    <label for="edit-email"
-                        class="block text-[#3769a9] font-bold text-sm border-b-2 border-[#33b842] pb-0.5 w-fit">Adresse
-                        e-mail</label>
-                    <input type="email" id="edit-email" name="newEmail"
-                        placeholder="<?php echo htmlspecialchars($userAccount?->getEmail() ?? ''); ?>"
-                        class="w-full px-4 py-1.5 text-sm bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-[#3769a9] font-medium outline-none focus:ring-2 focus:ring-[#3769a9] focus:ring-opacity-50 transition duration-200">
-                    <div class="flex justify-end pt-1">
-                        <button type="submit" name="update_email"
-                            class="px-5 py-1 bg-[#3769a9] hover:bg-[#2a5885] text-white text-xs font-bold rounded-full shadow-lg transition duration-200 hover:scale-105">
-                            Enregistrer
-                        </button>
-                    </div>
-                </form>
-
-                <form method="POST" id="edit-password-form"
-                    class="bg-white rounded-[1.2rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-2.5 space-y-1">
-                    <p class="text-[#3769a9] font-bold text-sm border-b-2 border-[#33b842] pb-0.5 w-fit">Mot de passe
-                    </p>
-                    <div class="relative pb-2">
-                        <input type="password" id="edit-password" name="newPassword" placeholder="Nouveau mot de passe"
-                            class="w-full px-4 py-1.5 pr-10 text-sm bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-[#3769a9] font-medium outline-none focus:ring-2 focus:ring-[#3769a9] focus:ring-opacity-50 transition duration-200">
-                        <button type="button" id="toggle-edit-password"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 text-[#3769a9] hover:text-[#2a5885] transition duration-200"
-                            aria-label="Afficher/Masquer">
-                            <svg id="eye-edit" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                            <svg id="eye-slash-edit" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 hidden"
-                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                            </svg>
-                        </button>
-                    </div>
-                    <div class="relative">
-                        <input type="password" id="edit-password-confirm" name="confirmNewPassword"
-                            placeholder="Confirmer le mot de passe"
-                            class="w-full px-4 py-1.5 pr-10 text-sm bg-[#F0EEE9] rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-[#3769a9] font-medium outline-none focus:ring-2 focus:ring-[#3769a9] focus:ring-opacity-50 transition duration-200">
-                        <button type="button" id="toggle-edit-password-confirm"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 text-[#3769a9] hover:text-[#2a5885] transition duration-200"
-                            aria-label="Afficher/Masquer">
-                            <svg id="eye-edit-confirm" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                            </svg>
-                            <svg id="eye-slash-edit-confirm" xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 hidden"
-                                fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                            </svg>
-                        </button>
-                    </div>
-                    <div class="flex justify-end pt-1">
-                        <button type="submit" name="update_password" id="save-password-btn"
-                            class="px-5 py-1 bg-[#3769a9] hover:bg-[#2a5885] text-white text-xs font-bold rounded-full shadow-lg transition duration-200 hover:scale-105">
-                            Enregistrer
-                        </button>
-                    </div>
-                </form>
-
             </div>
         </div>
-    </div>
 
-    <script>
-        const overlay = document.getElementById('edit-modal-overlay');
-        const openBtn = document.querySelector('button[title="Modifier le profil"]');
-        const closeBtn = document.getElementById('close-edit-modal');
+        <script>
+            const overlay = document.getElementById('edit-modal-overlay');
+            const openBtn = document.querySelector('button[title="Modifier le profil"]');
+            const closeBtn = document.getElementById('close-edit-modal');
 
-        openBtn.addEventListener('click', () => overlay.classList.remove('hidden'));
-        closeBtn.addEventListener('click', () => overlay.classList.add('hidden'));
-        overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.add('hidden'); });
+            openBtn.addEventListener('click', () => overlay.classList.remove('hidden'));
+            closeBtn.addEventListener('click', () => overlay.classList.add('hidden'));
+            overlay.addEventListener('click', (e) => { if (e.target === overlay) overlay.classList.add('hidden'); });
 
-        const togglePwd = (inputId, eyeId, slashId) => {
-            const input = document.getElementById(inputId);
-            const eye = document.getElementById(eyeId);
-            const slash = document.getElementById(slashId);
-            if (!input) return;
-            document.getElementById('toggle-' + inputId.replace('edit-', 'edit-'))?.addEventListener('click', () => {
+            const togglePwd = (inputId, eyeId, slashId) => {
+                const input = document.getElementById(inputId);
+                const eye = document.getElementById(eyeId);
+                const slash = document.getElementById(slashId);
+                if (!input) return;
+                document.getElementById('toggle-' + inputId.replace('edit-', 'edit-'))?.addEventListener('click', () => {
+                    input.type = input.type === 'password' ? 'text' : 'password';
+                    eye.classList.toggle('hidden');
+                    slash.classList.toggle('hidden');
+                });
+            };
+
+            document.getElementById('toggle-edit-password')?.addEventListener('click', () => {
+                const input = document.getElementById('edit-password');
                 input.type = input.type === 'password' ? 'text' : 'password';
-                eye.classList.toggle('hidden');
-                slash.classList.toggle('hidden');
+                document.getElementById('eye-edit').classList.toggle('hidden');
+                document.getElementById('eye-slash-edit').classList.toggle('hidden');
             });
-        };
 
-        document.getElementById('toggle-edit-password')?.addEventListener('click', () => {
-            const input = document.getElementById('edit-password');
-            input.type = input.type === 'password' ? 'text' : 'password';
-            document.getElementById('eye-edit').classList.toggle('hidden');
-            document.getElementById('eye-slash-edit').classList.toggle('hidden');
-        });
+            document.getElementById('toggle-edit-password-confirm')?.addEventListener('click', () => {
+                const input = document.getElementById('edit-password-confirm');
+                input.type = input.type === 'password' ? 'text' : 'password';
+                document.getElementById('eye-edit-confirm').classList.toggle('hidden');
+                document.getElementById('eye-slash-edit-confirm').classList.toggle('hidden');
+            });
 
-        document.getElementById('toggle-edit-password-confirm')?.addEventListener('click', () => {
-            const input = document.getElementById('edit-password-confirm');
-            input.type = input.type === 'password' ? 'text' : 'password';
-            document.getElementById('eye-edit-confirm').classList.toggle('hidden');
-            document.getElementById('eye-slash-edit-confirm').classList.toggle('hidden');
-        });
-
-        document.getElementById('edit-password-form')?.addEventListener('submit', (e) => {
-            const pwd = document.getElementById('edit-password').value;
-            const confirm = document.getElementById('edit-password-confirm').value;
-            if (pwd && confirm && pwd !== confirm) {
-                e.preventDefault();
-                alert("Les mots de passe ne correspondent pas.");
-            }
-        });
-
-        // Gestion automatique des messages de statut (Succès / Erreur)
-        const urlParams = new URLSearchParams(window.location.search);
-        const status = urlParams.get('status');
-        
-        if (status) {
-            // Dans tous les cas on rouvre la pop-up
-            overlay.classList.remove('hidden');
-            
-            if (status === 'success') {
-                const banner = document.getElementById('success-banner');
-                if (banner) banner.classList.remove('hidden');
-            } else if (status === 'error') {
-                const banner = document.getElementById('error-banner');
-                const bannerText = document.getElementById('error-banner-text');
-                if (banner) banner.classList.remove('hidden');
-                
-                // Message d'erreur spécifique si besoin
-                if (urlParams.get('msg') === 'mismatch') {
-                    bannerText.innerText = "Les mots de passe ne correspondent pas.";
+            document.getElementById('edit-password-form')?.addEventListener('submit', (e) => {
+                const pwd = document.getElementById('edit-password').value;
+                const confirm = document.getElementById('edit-password-confirm').value;
+                if (pwd && confirm && pwd !== confirm) {
+                    e.preventDefault();
+                    alert("Les mots de passe ne correspondent pas.");
                 }
-            }
-            
-            // Nettoyer l'URL proprement sans recharger
-            window.history.replaceState({}, document.title, window.location.pathname);
-            
-            // On cache les bannières après 5 sec si elles sont visibles
-            setTimeout(() => {
-                const successBanner = document.getElementById('success-banner');
-                const errorBanner = document.getElementById('error-banner');
-                
-                const activeBanner = (successBanner && !successBanner.classList.contains('hidden')) 
-                    ? successBanner 
-                    : (!errorBanner.classList.contains('hidden') ? errorBanner : null);
-                
-                if (activeBanner) {
-                    activeBanner.classList.add('transition-opacity', 'duration-500', 'opacity-0');
-                    setTimeout(() => {
-                        activeBanner.classList.add('hidden');
-                        activeBanner.classList.remove('opacity-0');
-                    }, 500);
+            });
+
+            // Gestion automatique des messages de statut (Succès / Erreur)
+            const urlParams = new URLSearchParams(window.location.search);
+            const status = urlParams.get('status');
+
+            if (status) {
+                // Dans tous les cas on rouvre la pop-up
+                overlay.classList.remove('hidden');
+
+                if (status === 'success') {
+                    const banner = document.getElementById('success-banner');
+                    if (banner) banner.classList.remove('hidden');
+                } else if (status === 'error') {
+                    const banner = document.getElementById('error-banner');
+                    const bannerText = document.getElementById('error-banner-text');
+                    if (banner) banner.classList.remove('hidden');
+
+                    // Message d'erreur spécifique si besoin
+                    if (urlParams.get('msg') === 'mismatch') {
+                        bannerText.innerText = "Les mots de passe ne correspondent pas.";
+                    }
                 }
-            }, 5000);
-        }
-    </script>
+
+                // Nettoyer l'URL proprement sans recharger
+                window.history.replaceState({}, document.title, window.location.pathname);
+
+                // On cache les bannières après 5 sec si elles sont visibles
+                setTimeout(() => {
+                    const successBanner = document.getElementById('success-banner');
+                    const errorBanner = document.getElementById('error-banner');
+
+                    const activeBanner = (successBanner && !successBanner.classList.contains('hidden'))
+                        ? successBanner
+                        : (!errorBanner.classList.contains('hidden') ? errorBanner : null);
+
+                    if (activeBanner) {
+                        activeBanner.classList.add('transition-opacity', 'duration-500', 'opacity-0');
+                        setTimeout(() => {
+                            activeBanner.classList.add('hidden');
+                            activeBanner.classList.remove('opacity-0');
+                        }, 500);
+                    }
+                }, 5000);
+            }
+        </script>
     <?php endif; ?>
 </body>
 

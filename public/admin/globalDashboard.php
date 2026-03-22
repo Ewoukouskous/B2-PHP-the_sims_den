@@ -166,7 +166,7 @@ foreach ($users as $user) {
         'dateJoined' => $user->getDateJoined(),
         'lastLogin' => $user->getLastLogin(),
         'profilePicPath' => $profilePicPath,
-        'achievementsCount' => count($userAchievementRepository->findAchievedByUserId($userId)),
+        'achievementsCount' => $userAchievementRepository->countByUserId($userId),
         'favoritesCount' => count($userFavoriteRepository->findAllByUserId($userId))
     ];
 }
