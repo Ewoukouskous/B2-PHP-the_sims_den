@@ -84,6 +84,11 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
                 $_SESSION['profilePicPath'] = $profilePicRepository->findById(1)->getPicturePath();
             }
 
+            // Unlock the welcome Achievement for the user
+            require_once $root_path . '/src/Service/AchievementService.php';
+            $achievementService = new AchievementService();
+            $achievementService->unlockWelcomeAchievement($userAccount->getId());
+
             header("Location: ../index.php");
             exit();
         } else {

@@ -18,6 +18,10 @@ class AchievementRepository {
     private function rowToAchievement(array $row) : Achievement {
         $achievement = new Achievement($row['achievement_name'], $row['icon_path'], $row['achievement_desc']);
         $achievement->setId($row['id']);
+        // If we use the LEFT JOIN for 'user_achievement' we put a unlock date
+        if (isset($row['unlocked_at']) && $row['unlocked_at'] !== null) {
+            $achievement->setUnlockedAt(new DateTime($row['unlocked_at']));
+        }
         return $achievement;
     }
 
@@ -65,6 +69,31 @@ class AchievementRepository {
 
         // If $row isn't empty we create a new Achievement object then return it
         return $row ? $this->rowToAchievement($row) : null;
+    }
+
+    // READ [By User] : Find all achievement by a selected User
+    // (using a LEFT JOIN we get all achievement and if the user didn't unlocked it some values will be null)
+    public function findAllWithUserProgress(int $userId) : array {
+        // We prepare the SQL request string with named parameters (to avoid SQL injections)
+        $sqlRequest = "SELECT achievement.*, user_achievement.*
+                    FROM achievement
+                    LEFT JOIN user_achievement
+                    ON achievement.id = user_achievement.id_achievement
+                    AND user_achievement.id_user = :id_user;";
+        // We prepare the SQL request with the PDO connection, "this->pdo->prepare()" return a PDOStatement object
+        $statement = $this->pdo->prepare($sqlRequest);
+        // We execute the request
+        $statement->execute(['id_user' => $userId]);
+        // We get all the rows resulted for our previous query
+        $rows = $statement->fetchAll();
+        $achievements = [];
+
+        // We create an Achievement object for each element of the $rows array
+        foreach ($rows as $row) {
+            $achievements[] = $this->rowToAchievement($row);
+        }
+        // If $row isn't empty we create a new Achievement object then return it
+        return $achievements;
     }
 
     // READ [ALL] : Find all achievement from the database
