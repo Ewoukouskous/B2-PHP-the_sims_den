@@ -81,13 +81,13 @@ $pegiAgeImage = 'age-' . $pegiAgeValue . '.jpg';
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 
-<body>
+<body class="overflow-hidden h-screen">
     <div id="background" class="fixed top-0 left-0 w-full h-full bg-cover bg-center bg-[#3769a9]">
         <img src="../img/bg.png" alt="Background Image" class="w-full h-full object-cover"
             onerror="this.style.display='none';">
     </div>
 
-    <div id="content" class="relative flex justify-center min-h-screen p-4 pt-12">
+    <div id="content" class="relative flex justify-center h-screen overflow-hidden p-4 pt-40">
 
         <!--        NAVBAR Section-->
 
@@ -99,7 +99,7 @@ $pegiAgeImage = 'age-' . $pegiAgeValue . '.jpg';
         include '../includes/header.php';
         ?>
 
-        <div class="absolute top-28 w-full max-w-7xl px-4 pb-12">
+        <div id="game-scroll-container" class="absolute top-28 bottom-0 w-full max-w-7xl px-4 overflow-y-auto pb-12 pt-2">
 
             <div
                 class="bg-[#F0EEE9] bg-opacity-80 rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] p-8 m-8 space-y-8">
@@ -120,7 +120,7 @@ $pegiAgeImage = 'age-' . $pegiAgeValue . '.jpg';
                             <div class="relative h-[30rem] w-full overflow-hidden rounded-[2rem]">
                                 <img src="../<?php echo htmlspecialchars($game->getImageHeroPath()); ?>"
                                     alt="<?php echo htmlspecialchars($game->getGameName()); ?>"
-                                    class="w-full h-full object-cover"
+                                    class="w-full h-full object-contain"
                                     onerror="this.onerror=null; this.src='../img/plumbob.webp';">
                             </div>
                         </div>

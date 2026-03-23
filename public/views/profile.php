@@ -19,6 +19,12 @@ require_once $root_path . '/src/Enum/GameType.php';
 require_once $root_path . '/src/Enum/UserRole.php';
 
 $isConnected = AuthMiddleware::is_connected();
+
+if (!$isConnected) {
+    header("Location: ../index.php");
+    exit();
+}
+
 $currentUserId = ($isConnected && isset($_SESSION['userId']) && is_numeric($_SESSION['userId'])) ? (int) $_SESSION['userId'] : null;
 
 // On regarde si un ID est passé en paramètre
@@ -163,8 +169,9 @@ if ($targetUserId !== null) {
             'title' => $game->getGameName(),
             'type' => $typeLabel,
             'price' => number_format($game->getPrice(), 2, ',', ' ') . ' €',
+            'playtime' => $userFavorite->getPlaytimeHours() . "H",
             'favorites' => $game->getFavoritesNumber(),
-            'image' => '../' . $game->getImageHeroPath(),
+            'image' => '../' . $game->getImageHeroPath()
         ];
     }
 }
@@ -218,7 +225,7 @@ if ($targetUserId !== null) {
         include '../includes/header.php';
         ?>
 
-        <div class="absolute top-30 w-full max-w-7xl px-4">
+        <div class="absolute top-40 w-full max-w-7xl px-4">
 
             <div
                 class="relative bg-[#F0EEE9] bg-opacity-90 rounded-[1.8rem] shadow-[0px_8px_0px_0px_rgba(51,184,66,0.9)] p-6 pt-10 flex flex-col gap-4">
@@ -257,21 +264,22 @@ if ($targetUserId !== null) {
 
                                             <!-- Tooltip personnalisé -->
                                             <div
-                                                class="achievement-tooltip hidden flex-col bg-[#3769a9] text-white text-[10px] px-3 py-2 rounded-xl shadow-xl whitespace-nowrap pointer-events-none border border-white/20">
+                                                class="achievement-tooltip hidden flex-col min-w-[220px] max-w-[260px] bg-[#f0eee9] text-[#3769a9] text-[11px] px-3 py-2.5 rounded-2xl border-2 border-[#3769a9] whitespace-normal leading-snug pointer-events-none">
                                                 <span
-                                                    class="font-bold underline mb-0.5"><?php echo htmlspecialchars($achievement->getAchievementName()); ?></span>
-                                                <span
-                                                    class="opacity-90 italic"><?php echo htmlspecialchars($achievement->getAchievementDesc()); ?></span>
+                                                    class="text-center text-base font-extrabold text-[#3769a9] tracking-wide"><?php echo htmlspecialchars($achievement->getAchievementName()); ?></span>
+                                                <div class="my-1 h-0.5 w-full rounded-full bg-[#33b842]"></div>
+                                                <span class="text-center text-[11px] leading-4 text-[#3769a9]"><span
+                                                        class="font-extrabold">Condition d'obtention :</span><br><?php echo htmlspecialchars($achievement->getAchievementDesc()); ?></span>
                                                 <?php if ($achievement->getUnlockedAt()): ?>
-                                                    <span class="mt-1.5 text-[9px] text-[#33b842] font-bold">Débloqué le :
+                                                    <span class="mt-2 text-center text-[10px] text-[#2f9a3f] font-bold">Débloqué le :
                                                         <?php echo $achievement->getUnlockedAt()->format('d/m/Y'); ?></span>
                                                 <?php else: ?>
                                                     <span
-                                                        class="mt-1.5 text-[9px] text-gray-300 font-bold uppercase tracking-wider">Verrouillé</span>
+                                                        class="mt-2 text-center text-[10px] text-[#3769a9]/70 font-bold uppercase tracking-wider">Verrouillé</span>
                                                 <?php endif; ?>
                                                 <!-- Petite pointe du tooltip -->
                                                 <div
-                                                    class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#3769a9] rotate-45 border-r border-b border-white/10">
+                                                    class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-3 h-3 bg-[#eef5ff] rotate-45 border-r-2 border-b-2 border-[#3769a9]">
                                                 </div>
                                             </div>
                                         </div>
@@ -312,7 +320,7 @@ if ($targetUserId !== null) {
 
                 <div class="flex flex-col gap-3">
                     <h2 class="text-2xl font-bold text-[#3769a9] pb-1 inline-block border-b-3 border-[#33b842] w-fit">
-                        Favoris :
+                        Derniers favoris :
                     </h2>
 
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 min-h-[14rem]">
@@ -338,6 +346,11 @@ if ($targetUserId !== null) {
                                         <?php echo htmlspecialchars($favorite['type']); ?>
                                     </span>
                                     <div class="flex items-center gap-2">
+                                        <div
+                                                class=" border-b-2 border-[#33b842] px-4 py-0.5 text-[#3769a9] font-bold text-xs">
+                                            A joué :
+                                            <?php echo htmlspecialchars($favorite['playtime']); ?>
+                                        </div>
                                         <div
                                             class="bg-[#F0EEE9] px-2 py-0.5 rounded-full shadow-[0px_1px_0px_1px_rgba(158,158,158,1)] text-[#3769a9] font-bold text-xs">
                                             <?php echo htmlspecialchars($favorite['price']); ?>

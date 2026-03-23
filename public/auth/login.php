@@ -79,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
     <img src="../img/bg.png" alt="Background Image" class="w-full h-full object-cover" onerror="this.style.display='none';">
 </div>
 
-<div id="content" class="relative flex flex-col items-center h-full p-3 pt-8">
+<div id="content" class="relative flex flex-col items-center h-full p-3 pt-32">
 
     <!--        NAVBAR Section-->
 
@@ -93,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
 
     <!--        LOGIN FORM Section-->
 
-    <div id="login-container" class="relative w-full max-w-6xl mt-12">
+    <div id="login-container" class="relative w-full max-w-6xl mt-8">
 
         <!--            TITLE (positioned above the container)-->
         <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 z-10">
@@ -102,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
             </h1>
         </div>
 
-        <div class="bg-[#F0EEE9] bg-opacity-95 rounded-[3rem] pt-24 px-8 pb-8 shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)]">
+        <div class="bg-[#F0EEE9] bg-opacity-95 rounded-[3rem] pt-16 px-8 pb-8 shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)]">
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
 

@@ -14,7 +14,7 @@ require_once $root_path . '/src/Enum/PegiAge.php';
 require_once $root_path . '/src/Enum/UserRole.php';
 
 // Déterminer si l'utilisateur est connecté
-$isConnected = AuthMiddleware::is_connected($_SESSION);
+$isConnected = AuthMiddleware::is_connected();
 $userRole = $_SESSION['userRole'] ?? null;
 $isAdmin = $userRole === UserRole::ADMIN->value;
 $currentUserId = ($isConnected && isset($_SESSION['userId']) && is_numeric($_SESSION['userId'])) ? (int) $_SESSION['userId'] : null;
@@ -41,13 +41,13 @@ if ($currentUserId !== null) {
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 
-<body>
+<body class="overflow-hidden h-screen">
     <div id="background" class="fixed top-0 left-0 w-full h-full bg-cover bg-center bg-[#3769a9]">
         <img src="/img/bg.png" alt="Background Image" class="w-full h-full object-cover"
             onerror="this.style.display='none';">
     </div>
 
-    <div id="content" class="relative flex justify-center h-screen p-4 pt-12">
+    <div id="content" class="relative flex justify-center h-screen overflow-hidden p-4 pt-40">
 
         <!--        NAVBAR Section-->
 
@@ -84,81 +84,94 @@ if ($currentUserId !== null) {
 
             </div>
 
+
         </div>
 
-        <div
-            class="absolute top-45 w-full max-w-7xl px-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-8">
+        <div id="games-scroll-container" class="absolute top-45 bottom-0 w-full max-w-7xl px-4 overflow-y-auto pb-12 pt-2">
+            <div id="games-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-8">
 
-            <?php if (empty($games)): ?>
-                <div class="col-span-full text-center py-16">
-                    <p class="text-2xl text-white font-bold bg-[#3769a9] bg-opacity-80 rounded-lg p-8 inline-block">
-                        Aucun jeu disponible pour le moment
-                    </p>
-                </div>
-            <?php else: ?>
-                <?php foreach ($games as $game): ?>
-                    <?php $gameId = (int) $game->getId();
-                    $isFavorite = isset($favoriteGameIds[$gameId]); ?>
-                    <div class="game-card relative group transition-transform duration-300 hover:-translate-y-2"
-                        data-type="<?php echo strtolower($game->getGameType()->value); ?>">
+                <?php if (empty($games)): ?>
+                    <div class="col-span-full text-center py-16">
+                        <p class="text-2xl text-white font-bold bg-[#3769a9] bg-opacity-80 rounded-lg p-8 inline-block">
+                            Aucun jeu disponible pour le moment
+                        </p>
+                    </div>
+                <?php else: ?>
+                    <?php foreach ($games as $game): ?>
+                        <?php $gameId = (int) $game->getId();
+                        $isFavorite = isset($favoriteGameIds[$gameId]); ?>
+                        <div class="game-card relative group transition-transform duration-300 hover:-translate-y-2"
+                            data-type="<?php echo strtolower($game->getGameType()->value); ?>">
 
-                        <?php if ($isConnected): ?>
-                            <form id="favorite-form-<?php echo $gameId; ?>" method="post" action="actions/favorite.php"
-                                class="hidden">
-                                <input type="hidden" name="action" value="<?php echo $isFavorite ? 'delete' : 'add'; ?>">
-                                <input type="hidden" name="gameId" value="<?php echo $gameId; ?>">
-                                <?php if (!$isFavorite): ?>
-                                    <input type="hidden" name="playtimeHours" value="0">
-                                <?php endif; ?>
-                            </form>
-                        <?php endif; ?>
+                            <?php if ($isConnected): ?>
+                                <form id="favorite-form-<?php echo $gameId; ?>" method="post" action="actions/favorite.php"
+                                    class="hidden">
+                                    <input type="hidden" name="action" value="<?php echo $isFavorite ? 'delete' : 'add'; ?>">
+                                    <input type="hidden" name="gameId" value="<?php echo $gameId; ?>">
+                                    <?php if (!$isFavorite): ?>
+                                        <input type="hidden" name="playtimeHours" value="0">
+                                    <?php endif; ?>
+                                </form>
+                            <?php endif; ?>
 
-                        <a href="views/game.php?id=<?php echo $gameId; ?>"
-                            class="block bg-white rounded-[2.5rem] p-3 shadow-lg border-b-8 border-[#33b842]">
+                            <a href="views/game.php?id=<?php echo $gameId; ?>"
+                                class="block bg-white rounded-[2.5rem] p-3 shadow-lg border-b-8 border-[#33b842]">
 
-                            <div class="relative h-48 w-full overflow-hidden rounded-[2rem]">
-                                <img src="<?php echo htmlspecialchars($game->getImageHeroPath()); ?>"
-                                    alt="<?php echo htmlspecialchars($game->getGameName()); ?>"
-                                    class="w-full h-full object-cover"
-                                    onerror="this.onerror=null; this.src='/img/plumbob.webp';">
-                            </div>
+                                <div class="relative h-48 w-full overflow-hidden rounded-[2rem]">
+                                    <img src="<?php echo htmlspecialchars($game->getImageHeroPath()); ?>"
+                                        alt="<?php echo htmlspecialchars($game->getGameName()); ?>"
+                                        class="w-full h-full object-cover"
+                                        onerror="this.onerror=null; this.src='/img/plumbob.webp';">
+                                </div>
 
-                            <div class="mt-4 mb-16 text-center">
+                                <div class="mt-4 mb-16 text-center">
+                                    <div
+                                        class="px-6 py-1 bg-[#F0EEE9] bg-opacity-80 rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-[#3769a9] font-medium outline-none">
+                                        <?php echo htmlspecialchars($game->getGameName()); ?>
+                                    </div>
+                                </div>
+
                                 <div
-                                    class="px-6 py-1 bg-[#F0EEE9] bg-opacity-80 rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-[#3769a9] font-medium outline-none">
-                                    <?php echo htmlspecialchars($game->getGameName()); ?>
-                                </div>
-                            </div>
+                                    class="absolute -bottom-6 left-0 w-full flex justify-between items-center p-4 pointer-events-none transform -translate-y-1/2">
 
-                            <div
-                                class="absolute -bottom-6 left-0 w-full flex justify-between items-center p-4 pointer-events-none transform -translate-y-1/2">
+                                    <div class="flex items-center">
+                                        <span
+                                            class="pointer-events-auto bg-[#33b842] text-white text-[10px] font-bold px-4 py-2 rounded-full shadow-[0px_2px_0px_1.5px_rgba(0,0,0,0.1)] border border-white/20 whitespace-nowrap">
+                                            <?php echo $game->getGameType() === GameType::PC ? 'PC' : ucfirst($game->getGameType()->value); ?>
+                                        </span>
+                                    </div>
 
-                                <div class="flex items-center">
-                                    <span
-                                        class="pointer-events-auto bg-[#33b842] text-white text-[10px] font-bold px-4 py-2 rounded-full shadow-[0px_2px_0px_1.5px_rgba(0,0,0,0.1)] border border-white/20 whitespace-nowrap">
-                                        <?php echo $game->getGameType() === GameType::PC ? 'PC' : ucfirst($game->getGameType()->value); ?>
-                                    </span>
-                                </div>
-
-                                <div class="flex items-center gap-2">
-                                    <div class="relative flex flex-col items-center">
-                                        <?php if ($isConnected): ?>
-                                            <?php if ($isFavorite): ?>
-                                                <button type="button"
-                                                    onclick="return submitFavoriteForm(event, 'favorite-form-<?php echo $gameId; ?>', false);"
-                                                    class="pointer-events-auto bg-[#F0EEE9] p-2 rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] flex items-center justify-center hover:scale-110 transition-transform cursor-pointer"
-                                                    aria-label="Retirer des favoris">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500"
-                                                        fill="currentColor" viewBox="0 0 24 24">
-                                                        <path
-                                                            d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                                    </svg>
-                                                </button>
+                                    <div class="flex items-center gap-2">
+                                        <div class="relative flex flex-col items-center">
+                                            <?php if ($isConnected): ?>
+                                                <?php if ($isFavorite): ?>
+                                                    <button type="button"
+                                                        onclick="return submitFavoriteForm(event, 'favorite-form-<?php echo $gameId; ?>', false);"
+                                                        class="pointer-events-auto bg-[#F0EEE9] p-2 rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] flex items-center justify-center hover:scale-110 transition-transform cursor-pointer"
+                                                        aria-label="Retirer des favoris">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500"
+                                                            fill="currentColor" viewBox="0 0 24 24">
+                                                            <path
+                                                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                                        </svg>
+                                                    </button>
+                                                <?php else: ?>
+                                                    <button type="button"
+                                                        onclick="return submitFavoriteForm(event, 'favorite-form-<?php echo $gameId; ?>', true);"
+                                                        class="pointer-events-auto bg-[#F0EEE9] p-2 rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] flex items-center justify-center hover:scale-110 transition-transform cursor-pointer"
+                                                        aria-label="Ajouter aux favoris">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#3769a9]" fill="none"
+                                                            viewBox="0 0 24 24" stroke="currentColor">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                                d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                                        </svg>
+                                                    </button>
+                                                <?php endif; ?>
                                             <?php else: ?>
                                                 <button type="button"
-                                                    onclick="return submitFavoriteForm(event, 'favorite-form-<?php echo $gameId; ?>', true);"
+                                                    onclick="event.preventDefault(); event.stopPropagation(); window.location.href='auth/login.php';"
                                                     class="pointer-events-auto bg-[#F0EEE9] p-2 rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] flex items-center justify-center hover:scale-110 transition-transform cursor-pointer"
-                                                    aria-label="Ajouter aux favoris">
+                                                    aria-label="Se connecter pour ajouter aux favoris">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#3769a9]" fill="none"
                                                         viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -166,36 +179,24 @@ if ($currentUserId !== null) {
                                                     </svg>
                                                 </button>
                                             <?php endif; ?>
-                                        <?php else: ?>
-                                            <button type="button"
-                                                onclick="event.preventDefault(); event.stopPropagation(); window.location.href='auth/login.php';"
-                                                class="pointer-events-auto bg-[#F0EEE9] p-2 rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] flex items-center justify-center hover:scale-110 transition-transform cursor-pointer"
-                                                aria-label="Se connecter pour ajouter aux favoris">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#3769a9]" fill="none"
-                                                    viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                                </svg>
-                                            </button>
-                                        <?php endif; ?>
-                                        <span
-                                            class="absolute -bottom-4 text-[9px] font-bold text-[#3769a9]"><?php echo $game->getFavoritesNumber(); ?></span>
+                                            <span
+                                                class="absolute -bottom-4 text-[9px] font-bold text-[#3769a9]"><?php echo $game->getFavoritesNumber(); ?></span>
+                                        </div>
+
+                                        <div
+                                            class="pointer-events-auto bg-[#F0EEE9] px-5 py-1.5 rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-[#3769a9] font-bold text-sm flex items-center h-[36px]">
+                                            <?php echo number_format($game->getPrice(), 2, ',', ' '); ?> €
+                                        </div>
                                     </div>
 
-                                    <div
-                                        class="pointer-events-auto bg-[#F0EEE9] px-5 py-1.5 rounded-full shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-[#3769a9] font-bold text-sm flex items-center h-[36px]">
-                                        <?php echo number_format($game->getPrice(), 2, ',', ' '); ?> €
-                                    </div>
                                 </div>
 
-                            </div>
+                            </a>
 
-                        </a>
-
-                    </div>
-                <?php endforeach; ?>
-            <?php endif; ?>
-
+                        </div>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
         </div>
 
     </div>
