@@ -16,20 +16,35 @@
 
         // Check if the sequence matches the cheat code
         if (input === cheatCode) {
+            console.log("'motherlode' cheat detected");
+
             // Send the cheat code to the backend via POST request
-            fetch("/actions/cheat.php", {
+            fetch("/actions/unlockMotherlode.php", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ cheat: "motherlode" })
             })
-                .then(response => response.json())
-                .then(data => {
-                    // If the achievement is successfully unlocked, reload the page to display it
-                    if (data.success) {
-                        window.location.reload();
+                .then(async (response) => {
+                    // Get the raw response and clean the BOM invisible character that make crash the JSON parsing
+                    const raw = await response.text();
+                    const cleaned = raw.replace(/^\uFEFF+/, "");
+                    return JSON.parse(cleaned);
+                })
+                // Then we take the json data to check if the request succeed
+                .then((data) => {
+                    // If succeed we call the showAchievementToast() to show the achievement and reload the page
+                    if (data.succeed) {
+                        window.showAchievementToast({
+                            title: "Succès débloqué",
+                            message: "Motherlode ! Jette un oeil a tes succès.",
+                            soundSrc: "/sounds/motherlode.mp3",
+                            autoCloseMs: 2500
+                        }).finally(() => {
+                            window.location.reload();
+                        });
+                    } else {
+                        console.log("Error while unlocking 'Motherlode' achievement : " + data.error);
                     }
                 })
-                .catch(error => console.error("Cheat error:", error));
+                .catch((error) => console.error("Cheat error:", error));
 
             // Reset the input string after a successful match
             input = "";
