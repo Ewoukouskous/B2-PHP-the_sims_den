@@ -73,19 +73,17 @@ $headerProfilePicPath = $_SESSION['profilePicPath'] ?? 'img/profilePics/green_pl
             <div id="middle" class="col-start-4 relative flex justify-center">
 
                 <?php if ($showProfilePic): ?>
-                    <!-- Photo de profil de l'utilisateur connecté -->
-                    <a href="<?php echo $basePath; ?>views/profil.php"
+                    <a href="<?php echo $basePath; ?>views/profile.php"
                         title="<?php echo htmlspecialchars($headerUsername); ?>">
                         <img src="<?php echo $basePath . ltrim(htmlspecialchars($headerProfilePicPath), '/'); ?>"
-                            class="absolute left-1/2 -translate-x-1/2 w-22 h-22 object-cover -top-16 bg-[#2a5885] border-4 border-[#33b842] rounded-full hover:scale-110 hover:-translate-x-1/2 transition-transform shadow-lg"
+                            class="absolute left-1/2 -translate-x-1/2 w-18 h-18 object-cover -top-16 bg-[#2a5885] border-4 border-[#33b842] rounded-full hover:scale-110 hover:-translate-x-1/2 transition-transform shadow-lg"
                             alt="Photo de profil de <?php echo htmlspecialchars($headerUsername); ?>"
                             onerror="this.onerror=null; this.src='<?php echo $basePath; ?>img/profilePics/green_plumbob.png';">
                     </a>
                 <?php else: ?>
-                    <!-- Logo plumbob par défaut -->
                     <a href="<?php echo $basePath; ?>index.php">
                         <img src="<?php echo $basePath . ltrim($headerProfilePicPath, '/'); ?>"
-                            class="absolute left-1/2 -translate-x-1/2 w-20 h-20 object-cover -top-14 bg-[#2a5885] border-4 border-[#33b842] rounded-full hover:scale-110 hover:-translate-x-1/2 transition-transform shadow-lg"
+                            class="absolute left-1/2 -translate-x-1/2 w-18 h-18 object-cover -top-14 bg-[#2a5885] border-4 border-[#33b842] rounded-full hover:scale-110 hover:-translate-x-1/2 transition-transform shadow-lg"
                             alt="logo" title="The Sims Den"
                             onerror="this.onerror=null; this.src='<?php echo $basePath; ?>img/profilePics/green_plumbob.png';">
                     </a>
