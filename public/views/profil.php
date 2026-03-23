@@ -43,83 +43,86 @@ $errors = $_SESSION['profile_errors'] ?? [];
 $success_msg = $_SESSION['profile_success'] ?? '';
 unset($_SESSION['profile_errors'], $_SESSION['profile_success']);
 
-// --- PROFILE UPDATES --- (Seulement si c'est notre propre profil)
+// --- PROFILE UPDATES --- 
 if ($isOwnProfile && $_SERVER['REQUEST_METHOD'] === 'POST' && $userAccount !== null) {
-    // 1. CHANGER PHOTO DE PROFIL
-    if (isset($_POST['update_pic']) && !empty($_POST['newProfilePicId'])) {
-        $newPicId = (int) $_POST['newProfilePicId'];
-        $userAccount->setIdProfilePic($newPicId);
-        $userAccountRepository->update($userAccount);
 
-        $newPic = $profilePicRepository->findById($newPicId);
-        if ($newPic)
-            $_SESSION['profilePicPath'] = ltrim($newPic->getPicturePath(), '/');
+    // 1. Profile picture changes
+    if (isset($_POST['update_pic']) && isset($_POST['newProfilePicId']) && $_POST['newProfilePicId'] != '') {
+        $newProfilePicId = filter_var($_POST['newProfilePicId'], FILTER_VALIDATE_INT);
 
-        $_SESSION['profile_success'] = "Photo de profil mise à jour !";
-        header("Location: profil.php?status=success");
-        exit();
+        if ($newProfilePicId === false || $newProfilePicId <= 0) {
+            $errors[] = "La photo de profil sélectionnée est invalide";
+        } elseif ($newProfilePicId === $userAccount->getIdProfilePic()) {
+            $errors[] = "La photo de profil est la même que l'ancienne";
+        } else {
+            $profilePic = $profilePicRepository->findById($newProfilePicId);
+            if ($profilePic === null) {
+                $errors[] = "La photo de profil sélectionnée est inexistante";
+            } else {
+                $userAccount->setIdProfilePic($profilePic->getId());
+                $userAccountRepository->update($userAccount);
+                $_SESSION['profilePicPath'] = ltrim($profilePic->getPicturePath(), '/');
+                $_SESSION['profile_success'] = "La modification de la photo de profil a été appliquée avec succès !";
+                header("Location: profil.php?status=success");
+                exit();
+            }
+        }
     }
 
-    // 2. CHANGER PSEUDO
-    if (isset($_POST['update_username']) && isset($_POST['newUsername'])) {
+    // 2. Username changes
+    if (isset($_POST['update_username']) && isset($_POST['newUsername']) && $_POST['newUsername'] != '') {
         $newUsername = trim($_POST['newUsername']);
-        $oldUsername = $userAccount->getUsername();
 
-        if (strlen($newUsername) < 5 || strlen($newUsername) > 30) {
-            $errors[] = "Le pseudo doit faire entre 5 et 30 caractères.";
-        } elseif ($newUsername === $oldUsername) {
-            $errors[] = "Le nouveau pseudo doit être différent de l'actuel.";
+        if ($userAccount->getUsername() === $newUsername) {
+            $errors[] = "Le nouveau nom d'utilisateur est le même que l'ancien";
+        } elseif (strlen($newUsername) < 5 || strlen($newUsername) > 30) {
+            $errors[] = "Le nom d'utilisateur doit faire entre 5 et 30 caractères";
         } elseif ($userAccountRepository->findByUsername($newUsername) !== null) {
-            $errors[] = "Ce pseudo est déjà utilisé.";
-        }
-
-        if (empty($errors)) {
+            $errors[] = "Le nom d'utilisateur est déjà utilisé";
+        } else {
             $userAccount->setUsername($newUsername);
             $userAccountRepository->update($userAccount);
             $_SESSION['username'] = $newUsername;
-            $_SESSION['profile_success'] = "Pseudo modifié avec succès !";
+            $_SESSION['profile_success'] = "La modification du nom d'utilisateur a été appliquée avec succès !";
             header("Location: profil.php?status=success");
             exit();
         }
     }
 
-    // 3. CHANGER EMAIL
-    if (isset($_POST['update_email']) && isset($_POST['newEmail'])) {
+    // 3. Email changes 
+    if (isset($_POST['update_email']) && isset($_POST['newEmail']) && $_POST['newEmail'] != '') {
         $newEmail = trim($_POST['newEmail']);
-        $oldEmail = $userAccount->getEmail();
 
-        if ($newEmail === $oldEmail) {
-            $errors[] = "Le nouvel email doit être différent de l'actuel.";
-        } elseif (!filter_var($newEmail, FILTER_VALIDATE_EMAIL)) {
-            $errors[] = "L'adresse email n'est pas valide.";
+        if ($userAccount->getEmail() === $newEmail) {
+            $errors[] = "Le nouveau courriel est le même que l'ancien";
+        } elseif (filter_var($newEmail, FILTER_VALIDATE_EMAIL) === false) {
+            $errors[] = "Le courriel fourni n'est pas valide";
         } elseif ($userAccountRepository->findByEmail($newEmail) !== null) {
-            $errors[] = "Cet email est déjà utilisé.";
-        }
-
-        if (empty($errors)) {
+            $errors[] = "Le courriel est déjà associé à un autre compte utilisateur";
+        } else {
             $userAccount->setEmail($newEmail);
             $userAccountRepository->update($userAccount);
-            $_SESSION['profile_success'] = "Email mis à jour !";
+            $_SESSION['profile_success'] = "La modification du courriel a été appliquée avec succès !";
             header("Location: profil.php?status=success");
             exit();
         }
     }
 
-    // 4. CHANGER MOT DE PASSE
-    if (isset($_POST['update_password']) && !empty($_POST['newPassword'])) {
+    // 4. Password changes
+    if (
+        isset($_POST['update_password']) && isset($_POST['newPassword']) && $_POST['newPassword'] != '' && isset($_POST['confirmNewPassword']) && $_POST['confirmNewPassword'] != ''
+    ) {
         $newPassword = $_POST['newPassword'];
-        $confirmPassword = $_POST['confirmNewPassword'];
+        $passwordConfirmation = $_POST['confirmNewPassword'];
 
-        if (strlen($newPassword) < 8) {
-            $errors[] = "Le mot de passe doit faire au moins 8 caractères.";
-        } elseif ($newPassword !== $confirmPassword) {
-            $errors[] = "Les deux mots de passe ne correspondent pas.";
-        }
-
-        if (empty($errors)) {
-            $userAccount->setPasswordHash(password_hash($newPassword, PASSWORD_DEFAULT));
+        if ($newPassword !== $passwordConfirmation) {
+            $errors[] = "Les deux mots de passe ne correspondent pas";
+        } elseif (strlen($newPassword) < 8) {
+            $errors[] = "Le mot de passe doit faire un minimum de 8 caractères";
+        } else {
+            $userAccount->setPasswordHash(password_hash($newPassword, PASSWORD_BCRYPT));
             $userAccountRepository->update($userAccount);
-            $_SESSION['profile_success'] = "Mot de passe modifié !";
+            $_SESSION['profile_success'] = "La modification du mot de passe a été appliquée avec succès !";
             header("Location: profil.php?status=success");
             exit();
         }
@@ -240,34 +243,42 @@ if ($targetUserId !== null) {
                             class="text-2xl font-bold text-[#3769a9] pb-1 inline-block border-b-3 border-[#33b842] w-fit">
                             Succès :
                         </h2>
-                        <div id="achievements-scroll" class="achievements-scroll h-[104px] overflow-y-auto overflow-x-visible pr-1">
+                        <div id="achievements-scroll"
+                            class="achievements-scroll h-[104px] overflow-y-auto overflow-x-visible pr-1">
                             <div class="grid grid-cols-5 gap-y-2 gap-x-3 w-fit">
-                            <?php if (empty($achievements)): ?>
-                                <p class="text-[#3769a9] text-[10px] opacity-50 italic">Aucun succès débloqué.</p>
-                            <?php else: ?>
-                                <?php foreach ($achievements as $achievement): ?>
-                                    <div class="achievement-badge relative w-12 h-12 rounded-full border-2 border-[#3769a9] border-opacity-20 flex items-center justify-center transition-transform hover:scale-105 <?php echo $achievement->getUnlockedAt() ? 'bg-[#33b842] bg-opacity-20 border-[#33b842]' : 'bg-[#3769a9] bg-opacity-5'; ?>">
-
-                                        <img src="../<?php echo htmlspecialchars(ltrim($achievement->getIconPath(), '/')); ?>"
-                                            alt="Icon"
-                                            class="w-9 h-9 object-contain <?php echo $achievement->getUnlockedAt() ? '' : 'grayscale opacity-40'; ?>">
-
-                                        <!-- Tooltip personnalisé -->
+                                <?php if (empty($achievements)): ?>
+                                    <p class="text-[#3769a9] text-[10px] opacity-50 italic">Aucun succès débloqué.</p>
+                                <?php else: ?>
+                                    <?php foreach ($achievements as $achievement): ?>
                                         <div
-                                            class="achievement-tooltip hidden flex-col bg-[#3769a9] text-white text-[10px] px-3 py-2 rounded-xl shadow-xl whitespace-nowrap pointer-events-none border border-white/20">
-                                            <span class="font-bold underline mb-0.5"><?php echo htmlspecialchars($achievement->getAchievementName()); ?></span>
-                                            <span class="opacity-90 italic"><?php echo htmlspecialchars($achievement->getAchievementDesc()); ?></span>
-                                            <?php if ($achievement->getUnlockedAt()): ?>
-                                                <span class="mt-1.5 text-[9px] text-[#33b842] font-bold">Débloqué le : <?php echo $achievement->getUnlockedAt()->format('d/m/Y'); ?></span>
-                                            <?php else: ?>
-                                                <span class="mt-1.5 text-[9px] text-gray-300 font-bold uppercase tracking-wider">Verrouillé</span>
-                                            <?php endif; ?>
-                                            <!-- Petite pointe du tooltip -->
-                                            <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#3769a9] rotate-45 border-r border-b border-white/10"></div>
+                                            class="achievement-badge relative w-12 h-12 rounded-full border-2 border-[#3769a9] border-opacity-20 flex items-center justify-center transition-transform hover:scale-105 <?php echo $achievement->getUnlockedAt() ? 'bg-[#33b842] bg-opacity-20 border-[#33b842]' : 'bg-[#3769a9] bg-opacity-5'; ?>">
+
+                                            <img src="../<?php echo htmlspecialchars(ltrim($achievement->getIconPath(), '/')); ?>"
+                                                alt="Icon"
+                                                class="w-9 h-9 object-contain <?php echo $achievement->getUnlockedAt() ? '' : 'grayscale opacity-40'; ?>">
+
+                                            <!-- Tooltip personnalisé -->
+                                            <div
+                                                class="achievement-tooltip hidden flex-col bg-[#3769a9] text-white text-[10px] px-3 py-2 rounded-xl shadow-xl whitespace-nowrap pointer-events-none border border-white/20">
+                                                <span
+                                                    class="font-bold underline mb-0.5"><?php echo htmlspecialchars($achievement->getAchievementName()); ?></span>
+                                                <span
+                                                    class="opacity-90 italic"><?php echo htmlspecialchars($achievement->getAchievementDesc()); ?></span>
+                                                <?php if ($achievement->getUnlockedAt()): ?>
+                                                    <span class="mt-1.5 text-[9px] text-[#33b842] font-bold">Débloqué le :
+                                                        <?php echo $achievement->getUnlockedAt()->format('d/m/Y'); ?></span>
+                                                <?php else: ?>
+                                                    <span
+                                                        class="mt-1.5 text-[9px] text-gray-300 font-bold uppercase tracking-wider">Verrouillé</span>
+                                                <?php endif; ?>
+                                                <!-- Petite pointe du tooltip -->
+                                                <div
+                                                    class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-[#3769a9] rotate-45 border-r border-b border-white/10">
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
-                                <?php endforeach; ?>
-                            <?php endif; ?>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
@@ -381,7 +392,6 @@ if ($targetUserId !== null) {
                     </span>
                 </div>
 
-                <!-- Bannière de succès -->
                 <div id="success-banner"
                     class="<?php echo $success_msg ? '' : 'hidden'; ?> mx-5 mt-10 p-3 bg-green-100 border-2 border-green-500 rounded-2xl flex items-center gap-3 shadow-md">
                     <div class="bg-green-500 rounded-full p-1 text-white">
@@ -391,10 +401,10 @@ if ($targetUserId !== null) {
                         </svg>
                     </div>
                     <p class="text-green-700 font-bold text-sm">
-                        <?php echo htmlspecialchars($success_msg ?: 'Modifications enregistrées !'); ?></p>
+                        <?php echo htmlspecialchars($success_msg ?: 'Modifications enregistrées !'); ?>
+                    </p>
                 </div>
 
-                <!-- Encart d'erreurs (Liste à points) -->
                 <?php if (!empty($errors)): ?>
                     <div id="error-banner" class="mx-5 mt-10 p-4 bg-red-100 border-2 border-red-500 rounded-2xl shadow-md">
                         <div class="flex items-center gap-3 mb-2">
@@ -444,7 +454,6 @@ if ($targetUserId !== null) {
                             <?php
                             $pics = $profilePicRepository->findAll();
                             foreach ($pics as $pic):
-                                // On n'affiche pas la photo actuelle
                                 if (ltrim($pic->getPicturePath(), '/') === ltrim($profilePicPath, '/'))
                                     continue;
                                 ?>
@@ -669,7 +678,7 @@ if ($targetUserId !== null) {
 
                 document.body.appendChild(floatingTooltip);
             };
-            
+
             // Position the floating tooltip directly above the hovered badge
             const positionFloatingTooltip = (badge) => {
                 if (!floatingTooltip) return;
@@ -720,4 +729,5 @@ if ($targetUserId !== null) {
     </script>
 
 </body>
+
 </html>
