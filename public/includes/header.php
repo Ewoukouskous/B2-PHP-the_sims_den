@@ -56,9 +56,10 @@ $headerProfilePicPath = $_SESSION['profilePicPath'] ?? 'img/profilePics/green_pl
                 </a>
 
                 <div id="searchbar">
-                    <form method="post">
+                    <form method="get" action="<?php echo $basePath; ?>index.php">
                         <label>
-                            <input type="text" name="search"
+                            <input type="text" name="search" id="headerSearchInput"
+                                value="<?php echo htmlspecialchars($_GET['search'] ?? ''); ?>"
                                 placeholder="<?php echo htmlspecialchars($searchPlaceholder); ?>"
                                 class="pl-4 pr-32 py-1 bg-[#F0EEE9] bg-opacity-80 rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] placeholder:text-[#3769a9] outline-none focus:ring-2 focus:ring-[#3769a9] focus:ring-opacity-50 transition duration-200 ease-in-out"
                                 autocomplete="off">

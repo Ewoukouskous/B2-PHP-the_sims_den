@@ -174,4 +174,19 @@ class GameRepository {
         // We execute the request
         $statement->execute(['id' => $id]);
     }
+
+    // SEARCH : Find games matching a query string in their name
+    public function search(string $query) : array {
+        $sqlRequest = "SELECT * FROM game WHERE game_name LIKE :query ORDER BY id DESC;";
+        $statement = $this->pdo->prepare($sqlRequest);
+        // Use wildcards for partial match
+        $statement->execute(['query' => '%' . $query . '%']);
+        $rows = $statement->fetchAll();
+
+        $games = [];
+        foreach($rows as $row) {
+            $games[] = $this->rowToGame($row);
+        }
+        return $games;
+    }
 }

@@ -22,7 +22,12 @@ $currentUserId = ($isConnected && isset($_SESSION['userId']) && is_numeric($_SES
 $gameRepository = new GameRepository();
 $userFavoriteRepository = new UserFavoriteRepository();
 
-$games = $gameRepository->findAll();
+$searchQuery = $_GET['search'] ?? '';
+if (!empty(trim($searchQuery))) {
+    $games = $gameRepository->search($searchQuery);
+} else {
+    $games = $gameRepository->findAll();
+}
 
 $favoriteGameIds = [];
 if ($currentUserId !== null) {
@@ -126,7 +131,8 @@ if ($currentUserId !== null) {
 
                                 <div class="mt-4 mb-16 text-center">
                                     <div
-                                        class="px-6 py-1 bg-[#F0EEE9] bg-opacity-80 rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-[#3769a9] font-medium outline-none">
+                                        class="px-6 py-1 bg-[#F0EEE9] bg-opacity-80 rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] text-[#3769a9] font-medium outline-none truncate overflow-hidden"
+                                        title="<?php echo htmlspecialchars($game->getGameName()); ?>">
                                         <?php echo htmlspecialchars($game->getGameName()); ?>
                                     </div>
                                 </div>
