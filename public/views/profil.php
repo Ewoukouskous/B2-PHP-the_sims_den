@@ -272,7 +272,7 @@ if ($targetUserId !== null) {
                         </div>
                     </div>
 
-                    <div class="flex flex-col items-center gap-1.5 pt-7">
+                    <div class="flex flex-col items-center gap-1.5 pt-7" style="transform: translateY(-18px);">
                         <div
                             class="w-24 h-24 rounded-full bg-[#2a5885] border-4 border-[#33b842] overflow-hidden flex items-center justify-center shadow-lg -mt-20 z-10">
                             <img src="../<?php echo htmlspecialchars($profilePicPath); ?>"
