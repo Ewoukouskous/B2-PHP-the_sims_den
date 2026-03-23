@@ -11,7 +11,7 @@ require_once $root_path . '/src/Database/DatabaseConnection.php';
 require_once $root_path . '/src/Security/AuthMiddleware.php';
 
 // Check if the user is already login, we redirect him to the index.php
-if (AuthMiddleware::is_connected($_SESSION)) {
+if (AuthMiddleware::is_connected()) {
     header('Location: ../index.php');
     exit();
 }
@@ -83,6 +83,11 @@ if ($_SERVER['REQUEST_METHOD'] === "POST") {
             } else {
                 $_SESSION['profilePicPath'] = $profilePicRepository->findById(1)->getPicturePath();
             }
+
+            // Unlock the welcome Achievement for the user
+            require_once $root_path . '/src/Service/AchievementService.php';
+            $achievementService = new AchievementService();
+            $achievementService->unlockWelcomeAchievement($userAccount->getId());
 
             header("Location: ../index.php");
             exit();

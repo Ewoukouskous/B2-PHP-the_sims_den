@@ -15,7 +15,7 @@ require_once $root_path . '/src/Repository/PegiDescriptorRepository.php';
 
 
 // Check if the user is an admin, if not we redirect him to the index.php
-if (!AuthMiddleware::is_admin($_SESSION)) {
+if (!AuthMiddleware::is_admin()) {
     header('Location: /index.php');
     exit();
 }
@@ -213,7 +213,12 @@ if ($_SERVER['REQUEST_METHOD'] === "POST" && isset($_POST['action']) && $_POST['
                         }
 
                     }
-                    // And if every insert done is successfull (no error) we validate the transaction and redirect
+                    // And if every insert done is successfull (no error) we can validate the transaction and redirect
+                    // but before we try to unlock the achievement for the first game created
+                    require_once $root_path . '/src/Service/AchievementService.php';
+                    $achievementService = new AchievementService();
+                    $achievementService->unlockSpecificAchievement((int)$_SESSION['userId'], "Disque Additionnel");
+                    // Commit the pdo transaction and redirect
                     $pdo->commit();
                     header('Location: /admin/gameDashboard.php?success=1');
                     exit();

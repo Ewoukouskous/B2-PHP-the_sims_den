@@ -40,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['gam
         try {
             // Search if there is a 'user_favorite' associated to the gameId
             $existingFavorite = $favoriteRepo->findByIdPair($userId, $gameId);
+            $actionPerformed = false;
 
             // Case 1 : The user want to add a favorite and he DOES NOT already have it has favorite
             if ($action === 'add' && $existingFavorite === null) {
@@ -57,6 +58,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['gam
                 $game->setFavoriteNumber($game->getFavoritesNumber() + 1);
                 $gameRepo->update($game);
 
+                $actionPerformed = true;
+
                 // Case 2 : The user want to delete a favorite and he DOES have the game has favorite
             } elseif ($action === 'delete' && $existingFavorite !== null) {
                 // Remove the UserFavorite from the DB
@@ -65,16 +68,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['gam
                 // we ensure to not get with a negative number using max()
                 $game->setFavoriteNumber(max(0, $game->getFavoritesNumber() - 1));
                 $gameRepo->update($game);
+
+                $actionPerformed = true;
+            }
+            // If the 'add' or 'delete' of the favorite has worked, we check and unlock 'favorite' Achievement
+            if ($actionPerformed) {
+                // Check if the user has unlocked a favorite
+                require_once $root_path . '/src/Service/AchievementService.php';
+                $achievementService = new AchievementService();
+                $achievementService->checkFavoriteAchievements($userId,$gameId,$action);
             }
         } catch (Exception $exception) {
-            error_log("Erreur d'ajout de favoris : " . $exception->getMessage());
+            error_log("Erreur d'ajout de favoris ou de succès : " . $exception->getMessage());
 
             // In case of an exception (principally PDO) we redirect
             $refererPage = $_SERVER['HTTP_REFERER'] ?? '/index.php';
             header('Location: ' . $refererPage);
             exit();
         }
-
     }
 }
 
