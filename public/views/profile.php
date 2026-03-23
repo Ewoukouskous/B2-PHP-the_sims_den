@@ -218,7 +218,7 @@ if ($targetUserId !== null) {
         include '../includes/header.php';
         ?>
 
-        <div class="absolute top-30 w-full max-w-7xl px-4">
+        <div class="absolute top-40 w-full max-w-7xl px-4">
 
             <div
                 class="relative bg-[#F0EEE9] bg-opacity-90 rounded-[1.8rem] shadow-[0px_8px_0px_0px_rgba(51,184,66,0.9)] p-6 pt-10 flex flex-col gap-4">
