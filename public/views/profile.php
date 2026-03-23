@@ -131,6 +131,7 @@ if ($isOwnProfile && $_SERVER['REQUEST_METHOD'] === 'POST' && $userAccount !== n
     if (!empty($errors)) {
         $_SESSION['profile_errors'] = $errors;
         header("Location: profile.php?status=error");
+
         exit();
     }
 }
@@ -149,7 +150,8 @@ if ($userAccount !== null) {
 $favoriteGames = [];
 $favoritesCount = 0;
 if ($targetUserId !== null) {
-    foreach ($userFavoriteRepository->findAllByUserId($targetUserId) as $userFavorite) {
+    $allFavorites = $userFavoriteRepository->findAllByUserId($targetUserId);
+    foreach ($allFavorites as $userFavorite) {
         $game = $gameRepository->findById($userFavorite->getIdGame());
         if ($game === null) {
             continue;

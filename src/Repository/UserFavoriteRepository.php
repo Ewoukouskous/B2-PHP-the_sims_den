@@ -65,7 +65,7 @@ class UserFavoriteRepository {
     // READ [ALL BY USER_ID] : Find all user_favorite associated to a user_account
     public function findAllByUserId(int $idUser) : array {
         // We prepare the SQL request string with named parameters (to avoid SQL injections)
-        $sqlRequest = "SELECT * FROM user_favorite WHERE id_user = :id_user;";
+        $sqlRequest = "SELECT * FROM user_favorite WHERE id_user = :id_user ORDER BY date_added DESC;";
         // We prepare the SQL request with the PDO connection, "this->pdo->prepare()" return a PDOStatement object
         $statement = $this->pdo->prepare($sqlRequest);
         // We execute the request
