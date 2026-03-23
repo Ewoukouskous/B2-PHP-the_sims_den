@@ -33,7 +33,8 @@ if ($currentUserId !== null) {
             'price' => number_format($game->getPrice(), 2, ',', ' ') . ' €',
             'image' => '../' . $game->getImageHeroPath(),
             'type' => $typeLabel,
-            'playtime' => $userFavorite->getPlaytimeHours()
+            'playtime' => $userFavorite->getPlaytimeHours(),
+            'addedDate' => $userFavorite->getDateAdded()->format('d/m/Y') ?? '--/--/----'
         ];
     }
 }
@@ -108,7 +109,8 @@ if ($currentUserId !== null) {
                                     <div
                                         class="bg-[#F0EEE9] rounded-4xl shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] px-4 py-1.5 flex justify-between items-center text-[#3769a9] font-medium leading-tight">
                                         <span
-                                            class="text-xl md:text-2xl text-left"><?php echo htmlspecialchars($favorite['title']); ?></span>
+                                            class="text-xl md:text-2xl text-left"><?php echo htmlspecialchars($favorite['title']); ?>
+                                        </span>
                                         <span
                                             class="text-sm md:text-base opacity-80 whitespace-nowrap ml-2 bg-white px-3 py-0.5 rounded-full shadow-[0px_1px_0px_1px_rgba(158,158,158,1)]">
                                             <?php echo (int) $favorite['playtime']; ?> h de jeu
@@ -117,16 +119,22 @@ if ($currentUserId !== null) {
 
                                     <div class="flex flex-wrap gap-1.5 px-1">
                                         <span
-                                            class="bg-[#33b842] text-white text-xs font-bold px-2.5 py-0.5 rounded-full shadow-[0px_1px_0px_1px_rgba(0,0,0,0.08)] border border-white/20">
-                                            <?php echo htmlspecialchars($favorite['type']); ?>
+                                                class="bg-[#33b842] text-white text-xs font-bold px-2.5 py-0.5 rounded-full shadow-[0px_1px_0px_1px_rgba(0,0,0,0.08)] border border-white/20">
+                                                <?php echo htmlspecialchars($favorite['type']); ?>
+                                        </span>
+                                        <span
+                                                class="bg-[#F0EEE9] text-[#3769a9] text-xs font-bold px-2.5 py-0.5 rounded-full shadow-[0px_1px_0px_1px_rgba(0,0,0,0.08)] border border-black/20">
+                                                Ajouté le : <?php echo htmlspecialchars($favorite['addedDate']); ?>
                                         </span>
                                     </div>
 
                                     <div
                                         class="bg-[#F0EEE9] rounded-[1rem] shadow-[0px_2px_0px_1.5px_rgba(158,158,158,1)] px-4 py-2 text-left text-[#3769a9] text-lg md:text-xl font-medium h-[4.5rem] flex items-start justify-start overflow-hidden">
                                         <p class="description-clamp w-full leading-tight text-left">
-                                            <?php echo htmlspecialchars($favorite['description']); ?></p>
+                                            <?php echo htmlspecialchars($favorite['description']); ?>
+                                        </p>
                                     </div>
+
                                 </div>
 
                                 <div class="flex flex-col justify-center items-center gap-2.5 lg:pr-1">

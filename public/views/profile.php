@@ -169,8 +169,9 @@ if ($targetUserId !== null) {
             'title' => $game->getGameName(),
             'type' => $typeLabel,
             'price' => number_format($game->getPrice(), 2, ',', ' ') . ' €',
+            'playtime' => $userFavorite->getPlaytimeHours() . "H",
             'favorites' => $game->getFavoritesNumber(),
-            'image' => '../' . $game->getImageHeroPath(),
+            'image' => '../' . $game->getImageHeroPath()
         ];
     }
 }
@@ -319,7 +320,7 @@ if ($targetUserId !== null) {
 
                 <div class="flex flex-col gap-3">
                     <h2 class="text-2xl font-bold text-[#3769a9] pb-1 inline-block border-b-3 border-[#33b842] w-fit">
-                        Favoris :
+                        Derniers favoris :
                     </h2>
 
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4 min-h-[14rem]">
@@ -345,6 +346,11 @@ if ($targetUserId !== null) {
                                         <?php echo htmlspecialchars($favorite['type']); ?>
                                     </span>
                                     <div class="flex items-center gap-2">
+                                        <div
+                                                class=" border-b-2 border-[#33b842] px-4 py-0.5 text-[#3769a9] font-bold text-xs">
+                                            A joué :
+                                            <?php echo htmlspecialchars($favorite['playtime']); ?>
+                                        </div>
                                         <div
                                             class="bg-[#F0EEE9] px-2 py-0.5 rounded-full shadow-[0px_1px_0px_1px_rgba(158,158,158,1)] text-[#3769a9] font-bold text-xs">
                                             <?php echo htmlspecialchars($favorite['price']); ?>
