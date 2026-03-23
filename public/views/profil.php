@@ -197,7 +197,7 @@ if ($targetUserId !== null) {
             onerror="this.style.display='none';">
     </div>
 
-    <div id="content" class="relative flex justify-center h-screen overflow-hidden p-4 pt-12">
+    <div id="content" class="relative flex justify-center h-screen overflow-hidden p-4 pt-5">
 
         <?php
         $basePath = '../';
@@ -210,7 +210,7 @@ if ($targetUserId !== null) {
         <div class="absolute top-30 w-full max-w-7xl px-4">
 
             <div
-                class="relative bg-[#F0EEE9] bg-opacity-90 rounded-[1.8rem] shadow-[0px_8px_0px_0px_rgba(51,184,66,0.9)] p-6 flex flex-col gap-4">
+                class="relative bg-[#F0EEE9] bg-opacity-90 rounded-[1.8rem] shadow-[0px_8px_0px_0px_rgba(51,184,66,0.9)] p-6 pt-10 flex flex-col gap-4">
 
                 <?php if ($isOwnProfile): ?>
                     <button type="button" title="Modifier le profil"
@@ -223,27 +223,27 @@ if ($targetUserId !== null) {
                     </button>
                 <?php endif; ?>
 
-                <div class="grid grid-cols-[1fr_auto_1fr] gap-6 items-start">
+                <div class="grid grid-cols-[1fr_auto_1fr] gap-8 items-start">
 
                     <div class="flex flex-col gap-3">
                         <h2
-                            class="text-2xl font-bold text-[#3769a9] pb-1 inline-block border-b-2 border-[#33b842] w-fit">
+                            class="text-2xl font-bold text-[#3769a9] pb-1 inline-block border-b-3 border-[#33b842] w-fit">
                             Succès :
                         </h2>
-                        <div class="grid grid-cols-5 gap-2">
+                        <div class="grid grid-cols-5 gap-y-2 gap-x-3 w-fit">
                             <?php if (empty($achievements)): ?>
                                 <p class="text-[#3769a9] text-[10px] opacity-50 italic">Aucun succès débloqué.</p>
                             <?php else: ?>
                                 <?php foreach ($achievements as $achievement): ?>
-                                    <div class="group relative w-12 h-12 rounded-full border-2 border-[#3769a9] border-opacity-20 flex items-center justify-center transition-transform hover:scale-110 <?php echo $achievement->getUnlockedAt() ? 'bg-[#33b842] bg-opacity-20 border-[#33b842]' : 'bg-[#3769a9] bg-opacity-5'; ?>">
+                                    <div class="group relative w-12 h-12 rounded-full border-2 border-[#3769a9] border-opacity-20 flex items-center justify-center transition-transform hover:scale-105 <?php echo $achievement->getUnlockedAt() ? 'bg-[#33b842] bg-opacity-20 border-[#33b842]' : 'bg-[#3769a9] bg-opacity-5'; ?>">
 
                                         <img src="../<?php echo htmlspecialchars(ltrim($achievement->getIconPath(), '/')); ?>"
                                             alt="Icon"
-                                            class="w-7 h-7 object-contain <?php echo $achievement->getUnlockedAt() ? '' : 'grayscale opacity-40'; ?>">
+                                            class="w-9 h-9 object-contain <?php echo $achievement->getUnlockedAt() ? '' : 'grayscale opacity-40'; ?>">
 
                                         <!-- Tooltip personnalisé -->
                                         <div
-                                            class="hidden group-hover:flex flex-col absolute -top-16 left-1/2 -translate-x-1/2 bg-[#3769a9] text-white text-[10px] px-3 py-2 rounded-xl shadow-xl whitespace-nowrap z-50 pointer-events-none border border-white/20">
+                                            class="hidden group-hover:flex flex-col absolute -top-15 left-1/2 -translate-x-1/2 bg-[#3769a9] text-white text-[10px] px-3 py-2 rounded-xl shadow-xl whitespace-nowrap z-50 pointer-events-none border border-white/20">
                                             <span class="font-bold underline mb-0.5"><?php echo htmlspecialchars($achievement->getAchievementName()); ?></span>
                                             <span class="opacity-90 italic"><?php echo htmlspecialchars($achievement->getAchievementDesc()); ?></span>
                                             <?php if ($achievement->getUnlockedAt()): ?>
@@ -260,9 +260,9 @@ if ($targetUserId !== null) {
                         </div>
                     </div>
 
-                    <div class="flex flex-col items-center gap-2">
+                    <div class="flex flex-col items-center gap-1.5 pt-7">
                         <div
-                            class="w-20 h-20 rounded-full bg-[#2a5885] border-4 border-[#33b842] overflow-hidden flex items-center justify-center shadow-lg">
+                            class="w-24 h-24 rounded-full bg-[#2a5885] border-4 border-[#33b842] overflow-hidden flex items-center justify-center shadow-lg -mt-20 z-10">
                             <img src="../<?php echo htmlspecialchars($profilePicPath); ?>"
                                 alt="Photo de profil de <?php echo htmlspecialchars($username); ?>"
                                 class="w-full h-full object-cover"
@@ -272,9 +272,9 @@ if ($targetUserId !== null) {
                             class="text-2xl font-bold text-[#3769a9]"><?php echo htmlspecialchars($username); ?></span>
                     </div>
 
-                    <div class="flex flex-col gap-3 pl-10">
+                    <div class="flex flex-col gap-3 justify-self-end w-fit">
                         <h2
-                            class="text-2xl font-bold text-[#3769a9] pb-1 inline-block border-b-2 border-[#33b842] w-fit">
+                            class="text-2xl font-bold text-[#3769a9] pb-1 inline-block border-b-3 border-[#33b842] w-fit">
                             Infos :
                         </h2>
                         <div class="flex flex-col gap-1.5 text-[#3769a9] font-semibold text-base">
@@ -290,7 +290,7 @@ if ($targetUserId !== null) {
                 <hr class="border-t-2 border-[#3769a9] opacity-10">
 
                 <div class="flex flex-col gap-3">
-                    <h2 class="text-2xl font-bold text-[#3769a9] pb-1 inline-block border-b-2 border-[#33b842] w-fit">
+                    <h2 class="text-2xl font-bold text-[#3769a9] pb-1 inline-block border-b-3 border-[#33b842] w-fit">
                         Favoris :
                     </h2>
 
