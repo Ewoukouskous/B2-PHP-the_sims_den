@@ -189,6 +189,16 @@ if ($targetUserId !== null) {
     <meta charset="UTF-8">
     <title><?php echo htmlspecialchars($username); ?> - Profil - The Sims Den</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        .achievements-scroll {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .achievements-scroll::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
 </head>
 
 <body class="h-screen overflow-hidden">
@@ -230,12 +240,13 @@ if ($targetUserId !== null) {
                             class="text-2xl font-bold text-[#3769a9] pb-1 inline-block border-b-3 border-[#33b842] w-fit">
                             Succès :
                         </h2>
-                        <div class="grid grid-cols-5 gap-y-2 gap-x-3 w-fit">
+                        <div id="achievements-scroll" class="achievements-scroll h-[104px] overflow-y-auto overflow-x-visible pr-1">
+                            <div class="grid grid-cols-5 gap-y-2 gap-x-3 w-fit">
                             <?php if (empty($achievements)): ?>
                                 <p class="text-[#3769a9] text-[10px] opacity-50 italic">Aucun succès débloqué.</p>
                             <?php else: ?>
                                 <?php foreach ($achievements as $achievement): ?>
-                                    <div class="group relative w-12 h-12 rounded-full border-2 border-[#3769a9] border-opacity-20 flex items-center justify-center transition-transform hover:scale-105 <?php echo $achievement->getUnlockedAt() ? 'bg-[#33b842] bg-opacity-20 border-[#33b842]' : 'bg-[#3769a9] bg-opacity-5'; ?>">
+                                    <div class="achievement-badge relative w-12 h-12 rounded-full border-2 border-[#3769a9] border-opacity-20 flex items-center justify-center transition-transform hover:scale-105 <?php echo $achievement->getUnlockedAt() ? 'bg-[#33b842] bg-opacity-20 border-[#33b842]' : 'bg-[#3769a9] bg-opacity-5'; ?>">
 
                                         <img src="../<?php echo htmlspecialchars(ltrim($achievement->getIconPath(), '/')); ?>"
                                             alt="Icon"
@@ -243,7 +254,7 @@ if ($targetUserId !== null) {
 
                                         <!-- Tooltip personnalisé -->
                                         <div
-                                            class="hidden group-hover:flex flex-col absolute -top-15 left-1/2 -translate-x-1/2 bg-[#3769a9] text-white text-[10px] px-3 py-2 rounded-xl shadow-xl whitespace-nowrap z-50 pointer-events-none border border-white/20">
+                                            class="achievement-tooltip hidden flex-col bg-[#3769a9] text-white text-[10px] px-3 py-2 rounded-xl shadow-xl whitespace-nowrap pointer-events-none border border-white/20">
                                             <span class="font-bold underline mb-0.5"><?php echo htmlspecialchars($achievement->getAchievementName()); ?></span>
                                             <span class="opacity-90 italic"><?php echo htmlspecialchars($achievement->getAchievementDesc()); ?></span>
                                             <?php if ($achievement->getUnlockedAt()): ?>
@@ -257,6 +268,7 @@ if ($targetUserId !== null) {
                                     </div>
                                 <?php endforeach; ?>
                             <?php endif; ?>
+                            </div>
                         </div>
                     </div>
 
@@ -352,8 +364,6 @@ if ($targetUserId !== null) {
             </div>
 
         </div>
-
-    </div>
 
     </div>
 
@@ -635,6 +645,79 @@ if ($targetUserId !== null) {
             }
         </script>
     <?php endif; ?>
+
+    <script>
+        function initAchievementTooltips() {
+            // Select every achievement that trigger a tooltip
+            const achievementBadges = document.querySelectorAll('.achievement-badge');
+            // If there are no achievements on the page, we exit immediately to keep
+            if (!achievementBadges.length) return;
+
+            // Keep a single floating tooltip instance,we replace this instance on each hover to be sure there is only one
+            let floatingTooltip = null;
+
+            const createFloatingTooltip = (sourceTooltip) => {
+                if (floatingTooltip) floatingTooltip.remove();
+                floatingTooltip = sourceTooltip.cloneNode(true);
+                // The base tooltip stay hidden in the badge we show only the clone by removing "hidden" from it
+                floatingTooltip.classList.remove('hidden');
+                // We add `fixed` + very high z-index for the tooltip is above everything
+                floatingTooltip.classList.add('fixed', 'z-[9999]', 'flex');
+                // Initialize with a start position before calculate them
+                floatingTooltip.style.left = '0px';
+                floatingTooltip.style.top = '0px';
+
+                document.body.appendChild(floatingTooltip);
+            };
+            
+            // Position the floating tooltip directly above the hovered badge
+            const positionFloatingTooltip = (badge) => {
+                if (!floatingTooltip) return;
+
+                const badgeRect = badge.getBoundingClientRect();
+                const tooltipRect = floatingTooltip.getBoundingClientRect();
+                const spacing = 8;
+                const viewportPadding = 8;
+
+                // Calculs details:
+                // horizontal: center tooltip on badge center
+                // vertical: place tooltip above badge with a small gap
+                // clamps: keep tooltip inside viewport limit
+                let left = badgeRect.left + (badgeRect.width / 2) - (tooltipRect.width / 2);
+                let top = badgeRect.top - tooltipRect.height - spacing;
+                left = Math.max(viewportPadding, Math.min(left, window.innerWidth - tooltipRect.width - viewportPadding));
+                top = Math.max(viewportPadding, top);
+
+                floatingTooltip.style.left = `${left}px`;
+                floatingTooltip.style.top = `${top}px`;
+            };
+
+            // Remove the floating tooltip and reset the reference
+            const hideFloatingTooltip = () => {
+                if (!floatingTooltip) return;
+                floatingTooltip.remove();
+                floatingTooltip = null;
+            };
+
+            achievementBadges.forEach((badge) => {
+                const sourceTooltip = badge.querySelector('.achievement-tooltip');
+                if (!sourceTooltip) return;
+
+                // On hover start, clone and show tooltip on the badge
+                badge.addEventListener('mouseenter', () => {
+                    createFloatingTooltip(sourceTooltip);
+                    positionFloatingTooltip(badge);
+                });
+
+                // Hide tooltip when the pointer leave the achievement
+                badge.addEventListener('mouseleave', hideFloatingTooltip);
+
+            });
+
+        }
+        // Call the function at the end of loading of the page
+        initAchievementTooltips();
+    </script>
 
 </body>
 </html>
