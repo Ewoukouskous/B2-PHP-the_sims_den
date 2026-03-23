@@ -63,7 +63,7 @@ if ($isOwnProfile && $_SERVER['REQUEST_METHOD'] === 'POST' && $userAccount !== n
                 $userAccountRepository->update($userAccount);
                 $_SESSION['profilePicPath'] = ltrim($profilePic->getPicturePath(), '/');
                 $_SESSION['profile_success'] = "La modification de la photo de profil a été appliquée avec succès !";
-                header("Location: profil.php?status=success");
+                header("Location: profile.php?status=success");
                 exit();
             }
         }
@@ -84,7 +84,7 @@ if ($isOwnProfile && $_SERVER['REQUEST_METHOD'] === 'POST' && $userAccount !== n
             $userAccountRepository->update($userAccount);
             $_SESSION['username'] = $newUsername;
             $_SESSION['profile_success'] = "La modification du nom d'utilisateur a été appliquée avec succès !";
-            header("Location: profil.php?status=success");
+            header("Location: profile.php?status=success");
             exit();
         }
     }
@@ -103,7 +103,7 @@ if ($isOwnProfile && $_SERVER['REQUEST_METHOD'] === 'POST' && $userAccount !== n
             $userAccount->setEmail($newEmail);
             $userAccountRepository->update($userAccount);
             $_SESSION['profile_success'] = "La modification du courriel a été appliquée avec succès !";
-            header("Location: profil.php?status=success");
+            header("Location: profile.php?status=success");
             exit();
         }
     }
@@ -123,14 +123,14 @@ if ($isOwnProfile && $_SERVER['REQUEST_METHOD'] === 'POST' && $userAccount !== n
             $userAccount->setPasswordHash(password_hash($newPassword, PASSWORD_BCRYPT));
             $userAccountRepository->update($userAccount);
             $_SESSION['profile_success'] = "La modification du mot de passe a été appliquée avec succès !";
-            header("Location: profil.php?status=success");
+            header("Location: profile.php?status=success");
             exit();
         }
     }
 
     if (!empty($errors)) {
         $_SESSION['profile_errors'] = $errors;
-        header("Location: profil.php?status=error");
+        header("Location: profile.php?status=error");
         exit();
     }
 }

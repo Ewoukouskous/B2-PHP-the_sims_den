@@ -352,7 +352,7 @@ $canEditSelectedUserRole = $canDeleteSelectedUser;
                                         <?php echo htmlspecialchars(formatShortDate($userRow['lastLogin'])); ?>
                                     </span>
                                     <span class="flex justify-end">
-                                        <a href="../views/profil.php?id=<?php echo $userRow['id']; ?>" 
+                                        <a href="../views/profile.php?id=<?php echo $userRow['id']; ?>" 
                                             onclick="event.stopPropagation();"
                                             class="w-9 h-9 rounded-full bg-white border border-[#cfcfcf] shadow-[0px_2px_0px_1px_rgba(158,158,158,1)] flex items-center justify-center text-[#3769a9] transition duration-200 hover:scale-105 hover:bg-[#ecf4ff] cursor-pointer"
                                             title="Voir le profil">

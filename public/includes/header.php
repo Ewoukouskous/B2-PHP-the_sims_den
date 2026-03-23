@@ -46,7 +46,7 @@ $headerProfilePicPath = $_SESSION['profilePicPath'] ?? 'img/profilePics/green_pl
 
             <?php if ($showProfilePic): ?>
                 <!-- Photo de profil de l'utilisateur connecté -->
-                <a href="<?php echo $basePath; ?>views/profil.php" title="<?php echo htmlspecialchars($headerUsername); ?>">
+                <a href="<?php echo $basePath; ?>views/profile.php" title="<?php echo htmlspecialchars($headerUsername); ?>">
                     <img src="<?php echo $basePath . htmlspecialchars($headerProfilePicPath); ?>"
                         class="absolute w-16 h-16 object-cover transform -top-6 bg-[#2a5885] border-4 border-[#33b842] rounded-full hover:scale-110 transition-transform"
                         alt="Photo de profil de <?php echo htmlspecialchars($headerUsername); ?>"
