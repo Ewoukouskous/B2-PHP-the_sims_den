@@ -112,5 +112,6 @@ $headerProfilePicPath = $_SESSION['profilePicPath'] ?? 'img/profilePics/green_pl
 </div>
 
 <?php if (isset($_SESSION['userId'])): ?>
+    <script src="<?php echo $basePath; ?>js/achievementToast.js"></script>
     <script src="<?php echo $basePath; ?>js/cheatCode.js"></script>
 <?php endif; ?>
