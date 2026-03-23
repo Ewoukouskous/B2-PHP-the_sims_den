@@ -155,6 +155,7 @@ if ($userAccount !== null) {
 
 $favoriteGames = [];
 $favoritesCount = 0;
+$totalValue = 0;
 if ($targetUserId !== null) {
     $allFavorites = $userFavoriteRepository->findAllByUserId($targetUserId);
     foreach ($allFavorites as $userFavorite) {
@@ -163,6 +164,7 @@ if ($targetUserId !== null) {
             continue;
         }
         $favoritesCount++;
+        $totalValue += $game->getPrice();
         $typeLabel = ucfirst($game->getGameType()->value);
         $favoriteGames[] = [
             'id' => $game->getId(),
@@ -301,7 +303,7 @@ if ($targetUserId !== null) {
                             class="text-2xl font-bold text-[#3769a9]"><?php echo htmlspecialchars($username); ?></span>
                     </div>
 
-                    <div class="flex flex-col gap-3 justify-self-end w-fit">
+                    <div class="flex flex-col gap-3 justify-self-end w-fit mr-6">
                         <h2
                             class="text-2xl font-bold text-[#3769a9] pb-1 inline-block border-b-3 border-[#33b842] w-fit">
                             Infos :
@@ -311,6 +313,7 @@ if ($targetUserId !== null) {
                                     class="font-bold"><?php echo htmlspecialchars($memberSince); ?></span></p>
                             <p>Nombre de favoris : <span class="font-bold"><?php echo $favoritesCount; ?></span></p>
                             <p>Nombre de succès : <span class="font-bold"><?php echo $achievementsCount; ?></span></p>
+                            <p>Valeur totale des favoris : <span class="font-bold whitespace-nowrap"><?php echo number_format($totalValue, 2, ',', ' '); ?> €</span></p>
                         </div>
                     </div>
 
