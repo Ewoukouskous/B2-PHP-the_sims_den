@@ -120,7 +120,7 @@ $pegiAgeImage = 'age-' . $pegiAgeValue . '.jpg';
                             <div class="relative h-[30rem] w-full overflow-hidden rounded-[2rem]">
                                 <img src="../<?php echo htmlspecialchars($game->getImageHeroPath()); ?>"
                                     alt="<?php echo htmlspecialchars($game->getGameName()); ?>"
-                                    class="w-full h-full object-cover"
+                                    class="w-full h-full object-contain"
                                     onerror="this.onerror=null; this.src='../img/plumbob.webp';">
                             </div>
                         </div>

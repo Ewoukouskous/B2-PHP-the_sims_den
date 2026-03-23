@@ -285,7 +285,7 @@ $canEditSelectedUserRole = $canDeleteSelectedUser;
                                         <div class="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg">
                                             <img src="../<?php echo htmlspecialchars($game->getImageTitlePath()); ?>"
                                                  alt="<?php echo htmlspecialchars($game->getGameName()); ?>"
-                                                 class="w-full h-full object-cover"
+                                                 class="w-full h-full object-scale-down"
                                                  onerror="this.onerror=null; this.src='../img/plumbob.webp';">
                                         </div>
 
