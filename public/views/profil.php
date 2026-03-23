@@ -311,7 +311,7 @@ if ($targetUserId !== null) {
                             <a href="game.php?id=<?php echo (int) $favorite['id']; ?>"
                                 class="group relative bg-white rounded-[1.5rem] p-2.5 shadow-[0px_4px_0px_0px_rgba(51,184,66,0.9)] hover:-translate-y-1 transition-transform duration-200 flex flex-col gap-2 h-[14rem]">
 
-                                <div class="h-28 w-full overflow-hidden rounded-[1rem]">
+                                <div class="h-35 w-full overflow-hidden rounded-[1rem]">
                                     <img src="<?php echo htmlspecialchars($favorite['image']); ?>"
                                         alt="<?php echo htmlspecialchars($favorite['title']); ?>"
                                         class="w-full h-full object-cover"
