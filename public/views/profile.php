@@ -19,6 +19,12 @@ require_once $root_path . '/src/Enum/GameType.php';
 require_once $root_path . '/src/Enum/UserRole.php';
 
 $isConnected = AuthMiddleware::is_connected();
+
+if (!$isConnected) {
+    header("Location: ../index.php");
+    exit();
+}
+
 $currentUserId = ($isConnected && isset($_SESSION['userId']) && is_numeric($_SESSION['userId'])) ? (int) $_SESSION['userId'] : null;
 
 // On regarde si un ID est passé en paramètre
