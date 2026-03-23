@@ -157,11 +157,7 @@ if ($targetUserId !== null) {
             continue;
         }
         $favoritesCount++;
-        $typeLabel = match ($game->getGameType()) {
-            GameType::PC => 'PC',
-            GameType::CONSOLE => 'Console',
-            GameType::SMARTPHONE => 'Smartphone',
-        };
+        $typeLabel = ucfirst($game->getGameType()->value);
         $favoriteGames[] = [
             'id' => $game->getId(),
             'title' => $game->getGameName(),
